@@ -23,6 +23,7 @@ const RegistrationForm = ({ open, onClose }: RegistrationFormProps) => {
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState({
+    interestedIn: "",
     interestedFor: "",
     firstName: "",
     lastName: "",
@@ -129,6 +130,25 @@ const RegistrationForm = ({ open, onClose }: RegistrationFormProps) => {
             <h3 className="text-base sm:text-lg font-semibold text-foreground">Personal Information</h3>
 
             <div className="space-y-2">
+              <Label htmlFor="interestedIn" className="text-sm">
+                Interested In <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={formData.interestedIn}
+                onValueChange={(value) => updateField("interestedIn", value)}
+                required
+              >
+                <SelectTrigger className="h-10 sm:h-auto text-sm sm:text-base">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="interestedFor" className="text-sm">
                 Interested For <span className="text-destructive">*</span>
               </Label>
@@ -146,37 +166,6 @@ const RegistrationForm = ({ open, onClose }: RegistrationFormProps) => {
                   <SelectItem value="marriage">Marriage</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName" className="text-sm">
-                  First Name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => updateField("firstName", e.target.value)}
-                  placeholder="Enter first name"
-                  className="text-sm sm:text-base h-10 sm:h-auto"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName" className="text-sm">
-                  Last Name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => updateField("lastName", e.target.value)}
-                  placeholder="Enter last name"
-                  className="text-sm sm:text-base h-10 sm:h-auto"
-                  required
-                />
-              </div>
             </div>
 
             <div className="space-y-2">
