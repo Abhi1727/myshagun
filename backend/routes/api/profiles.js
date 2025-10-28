@@ -7,8 +7,8 @@ const db = require('../../config/db');
 // @access  Public
 router.get('/featured', async (req, res) => {
     try {
-        const profiles = await db.query('SELECT * FROM profiles ORDER BY random() LIMIT 4');
-        res.json(profiles.rows);
+        const [profiles] = await db.query('SELECT * FROM profiles ORDER BY RAND() LIMIT 4');
+        res.json(profiles);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');

@@ -5,16 +5,40 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Home from './components/Home';
 import Login from './components/Login';
 import Register from './components/Register';
+import Chat from './components/Chat';
 
 const Stack = createStackNavigator();
 
 const App = () => {
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName="Login">
-                <Stack.Screen name="Home" component={Home} />
-                <Stack.Screen name="Login" component={Login} />
-                <Stack.Screen name="Register" component={Register} />
+            <Stack.Navigator
+                initialRouteName="Login"
+                screenOptions={{
+                    headerStyle: { backgroundColor: '#ec4899' },
+                    headerTintColor: 'white',
+                    headerTitleStyle: { fontWeight: 'bold' }
+                }}
+            >
+                <Stack.Screen
+                    name="Login"
+                    component={Login}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                    name="Register"
+                    component={Register}
+                    options={{ title: 'Create Account' }}
+                />
+                <Stack.Screen
+                    name="Home"
+                    component={Home}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                    name="Chat"
+                    component={Chat}
+                />
             </Stack.Navigator>
         </NavigationContainer>
     );

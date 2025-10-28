@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Heart,
   Users,
@@ -21,6 +23,7 @@ import RegistrationForm from "./RegistrationForm";
 import Footer from "./Footer";
 import heroImage from "@/assets/hero-couple.jpg";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import profileSarah from "@/assets/profile-sarah.jpg";
 import profileMichael from "@/assets/profile-michael.jpg";
@@ -36,7 +39,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import api from "@/lib/api";
+import api, { register } from "@/lib/api";
 
 interface Profile {
   id: string;
@@ -53,12 +56,23 @@ interface Profile {
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showRegistration, setShowRegistration] = useState(false);
   const [featuredProfiles, setFeaturedProfiles] = useState<Profile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     fetchFeaturedProfiles();
+
+    const timer = setTimeout(() => {
+      setShowRegistration(true);
+    }, 10000); // 10 seconds
+
+    return () => clearTimeout(timer); // Clean up the timer
   }, []);
 
   const fetchFeaturedProfiles = async () => {
@@ -71,6 +85,26 @@ const LandingPage = () => {
       setFeaturedProfiles([]);
     } finally {
       setLoadingProfiles(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { data } = await register({ firstName, lastName, email, password });
+      localStorage.setItem("token", data.token);
+      toast({
+        title: "Success!",
+        description: "Your account has been created successfully.",
+      });
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Registration failed:", error);
+      toast({
+        title: "Registration Failed",
+        description: error.response?.data?.errors?.[0]?.msg || error.response?.data?.details || "Please check your information and try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -236,6 +270,75 @@ const LandingPage = () => {
         </div>
       </header>
 
+      {/* Register Now Section */}
+      <section className="py-20 sm:py-28 bg-white relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-['Playfair_Display'] font-bold text-center mb-4 text-foreground">
+              Register Now
+            </h2>
+            <p className="text-center text-muted-foreground text-lg max-w-2xl mx-auto font-['Poppins']">
+              Create your account in just a few seconds and start your journey to find your soulmate.
+            </p>
+          </div>
+          <Card className="max-w-2xl mx-auto p-8 shadow-lg">
+            <form onSubmit={handleRegister}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="Your first name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Your last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="mt-6">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Your email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="mt-6">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Choose a strong password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="mt-8 text-center">
+                <Button type="submit" size="lg" className="w-full sm:w-auto">
+                  Register
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      </section>
+
       {/* Why Register Features */}
       <section className="py-16 bg-white relative overflow-hidden">
         <div className="container mx-auto px-4">
@@ -385,7 +488,7 @@ const LandingPage = () => {
                       <img
                         src={profile.profile_photo_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop&q=80"}
                         alt={`${profile.first_name} ${profile.last_name}`}
-                        className="w-full h-60 object-cover filter blur-sm"
+                        className="w-full h-60 object-cover filter blur-3xl"
                         onError={(e) => {
                           e.currentTarget.src = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop&q=80";
                         }}

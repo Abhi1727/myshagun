@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import { CheckCircle } from "lucide-react";
 import { format } from "date-fns";
+import api from "@/lib/api";
 
 interface RegistrationFormProps {
   open: boolean;
@@ -63,22 +64,10 @@ const RegistrationForm = ({ open, onClose }: RegistrationFormProps) => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          dateOfBirth: formData.dateOfBirth?.toISOString().split("T")[0],
-        }),
+      const { data } = await api.post('/users', {
+        ...formData,
+        dateOfBirth: formData.dateOfBirth?.toISOString().split("T")[0],
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.errors[0].msg || 'Failed to create profile.');
-      }
 
       // Store the token in localStorage
       localStorage.setItem('token', data.token);
@@ -93,7 +82,7 @@ const RegistrationForm = ({ open, onClose }: RegistrationFormProps) => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to create profile. Please try again.",
+        description: error.response?.data?.errors?.[0]?.msg || "Failed to create profile. Please try again.",
         variant: "destructive",
       });
     }
@@ -166,6 +155,37 @@ const RegistrationForm = ({ open, onClose }: RegistrationFormProps) => {
                   <SelectItem value="marriage">Marriage</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName" className="text-sm">
+                  First Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  value={formData.firstName}
+                  onChange={(e) => updateField("firstName", e.target.value)}
+                  placeholder="Enter first name"
+                  className="text-sm sm:text-base h-10 sm:h-auto"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName" className="text-sm">
+                  Last Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  value={formData.lastName}
+                  onChange={(e) => updateField("lastName", e.target.value)}
+                  placeholder="Enter last name"
+                  className="text-sm sm:text-base h-10 sm:h-auto"
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

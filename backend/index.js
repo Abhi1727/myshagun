@@ -24,12 +24,13 @@ app.use('/api/events', require('./routes/api/events'));
 app.use('/api/gifts', require('./routes/api/gifts'));
 app.use('/api/kiosks', require('./routes/api/kiosks'));
 app.use('/api/profiles', require('./routes/api/profiles'));
+app.use('/api/chat', require('./routes/api/chat'));
 
 app.listen(port, async () => {
   console.log(`Server is running on port: ${port}`);
   try {
-    const res = await db.query('SELECT NOW()');
-    console.log('PostgreSQL connected:', res.rows[0].now);
+    const [rows] = await db.query('SELECT NOW() as currentTime');
+    console.log('MySQL connected:', rows[0].currentTime);
   } catch (err) {
     console.error('Database connection error', err.stack);
   }

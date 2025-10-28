@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
-import { User, LogOut, Settings } from "lucide-react";
+import { User, LogOut, Settings, Heart, MessageCircle } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 interface Profile {
@@ -87,6 +87,22 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex gap-1 sm:gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full h-9 w-9 sm:h-10 sm:w-10"
+              onClick={() => navigate("/browse")}
+            >
+              <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full h-9 w-9 sm:h-10 sm:w-10"
+              onClick={() => navigate("/messages")}
+            >
+              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Button>
             <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 sm:h-10 sm:w-10">
               <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
@@ -165,7 +181,7 @@ const Dashboard = () => {
                                                     <img 
                                                       src={profile.profile_photo_url} 
                                                       alt={`${profile.first_name} ${profile.last_name}`}
-                                                      className="w-full h-full object-cover absolute inset-0 blur-sm group-hover:blur-none transition-all duration-300"
+                                                      className="w-full h-full object-cover absolute inset-0 blur-lg transition-all duration-300"
                                                     />
                                                   ) : (
                                                     <User className="w-16 h-16 text-primary/60" />

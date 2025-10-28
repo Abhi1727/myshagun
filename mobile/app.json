@@ -1,29 +1,40 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "MyShagun",
+    "slug": "myshagun",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ec4899"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.myshagun.app"
     },
     "android": {
+      "package": "com.myshagun.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ec4899"
       },
-      "edgeToEdgeEnabled": true
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b458620b-e88f-4f8f-837f-75b4fcee8a04"
+      }
+    },
+    "owner": "abhishek1727"
   }
 }
