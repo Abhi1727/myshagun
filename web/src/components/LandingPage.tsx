@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Heart,
   Users,
@@ -24,7 +25,6 @@ import Footer from "./Footer";
 import heroImage from "@/assets/hero-couple.jpg";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import logo from "@/assets/logo.png";
 import profileSarah from "@/assets/profile-sarah.jpg";
 import profileMichael from "@/assets/profile-michael.jpg";
 import profilePriya from "@/assets/profile-priya.jpg";
@@ -51,8 +51,91 @@ interface Profile {
   profession: string | null;
   marital_status: string | null;
   height: string | null;
+  religion: string | null;
   profile_photo_url: string | null;
 }
+
+// Mock profiles as fallback when backend is not available
+const mockProfiles: Profile[] = [
+  {
+    id: "mock-1",
+    first_name: "Sarah",
+    last_name: "Johnson",
+    date_of_birth: "1995-06-15",
+    city: "New York",
+    living_in: "USA",
+    profession: "Software Engineer",
+    marital_status: "Never Married",
+    height: "5'6\"",
+    religion: "Christian",
+    profile_photo_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop&q=80"
+  },
+  {
+    id: "mock-2",
+    first_name: "Michael",
+    last_name: "Smith",
+    date_of_birth: "1992-03-22",
+    city: "Los Angeles",
+    living_in: "USA",
+    profession: "Business Analyst",
+    marital_status: "Never Married",
+    height: "5'11\"",
+    religion: "Hindu",
+    profile_photo_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=1000&fit=crop&q=80"
+  },
+  {
+    id: "mock-3",
+    first_name: "Priya",
+    last_name: "Sharma",
+    date_of_birth: "1996-09-10",
+    city: "Chicago",
+    living_in: "USA",
+    profession: "Doctor",
+    marital_status: "Never Married",
+    height: "5'5\"",
+    religion: "Hindu",
+    profile_photo_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&h=1000&fit=crop&q=80"
+  },
+  {
+    id: "mock-4",
+    first_name: "Rahul",
+    last_name: "Patel",
+    date_of_birth: "1993-11-28",
+    city: "San Francisco",
+    living_in: "USA",
+    profession: "Product Manager",
+    marital_status: "Never Married",
+    height: "5'10\"",
+    religion: "Hindu",
+    profile_photo_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&h=1000&fit=crop&q=80"
+  },
+  {
+    id: "mock-5",
+    first_name: "Emma",
+    last_name: "Williams",
+    date_of_birth: "1994-07-05",
+    city: "Boston",
+    living_in: "USA",
+    profession: "Marketing Manager",
+    marital_status: "Never Married",
+    height: "5'7\"",
+    religion: "Christian",
+    profile_photo_url: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=800&h=1000&fit=crop&q=80"
+  },
+  {
+    id: "mock-6",
+    first_name: "James",
+    last_name: "Brown",
+    date_of_birth: "1991-12-18",
+    city: "Seattle",
+    living_in: "USA",
+    profession: "Data Scientist",
+    marital_status: "Never Married",
+    height: "6'0\"",
+    religion: "Muslim",
+    profile_photo_url: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&h=1000&fit=crop&q=80"
+  }
+];
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -64,6 +147,11 @@ const LandingPage = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  // Stats counter state - commented out for future use
+  // const [statsVisible, setStatsVisible] = useState(false);
+  // const [stats, setStats] = useState({ matches: 0, users: 0, success: 0 });
 
   useEffect(() => {
     fetchFeaturedProfiles();
@@ -75,14 +163,43 @@ const LandingPage = () => {
     return () => clearTimeout(timer); // Clean up the timer
   }, []);
 
+  // Animated stats counter useEffect - commented out for future use
+  /* useEffect(() => {
+    if (statsVisible) {
+      const duration = 2000; // 2 seconds
+      const steps = 60;
+      const interval = duration / steps;
+
+      let currentStep = 0;
+      const timer = setInterval(() => {
+        currentStep++;
+        const progress = currentStep / steps;
+
+        setStats({
+          matches: Math.floor(6000000 * progress),
+          users: Math.floor(100000 * progress),
+          success: Math.floor(98 * progress),
+        });
+
+        if (currentStep >= steps) {
+          clearInterval(timer);
+          setStats({ matches: 6000000, users: 100000, success: 98 });
+        }
+      }, interval);
+
+      return () => clearInterval(timer);
+    }
+  }, [statsVisible]); */
+
   const fetchFeaturedProfiles = async () => {
     try {
       setLoadingProfiles(true);
       const { data } = await api.get('/profiles/featured');
-      setFeaturedProfiles(data);
+      setFeaturedProfiles(data && data.length > 0 ? data : mockProfiles);
     } catch (error) {
-      console.error("Failed to fetch profiles:", error);
-      setFeaturedProfiles([]);
+      console.error("Failed to fetch profiles from backend, using mock profiles:", error);
+      // Use mock profiles as fallback when backend is not available
+      setFeaturedProfiles(mockProfiles);
     } finally {
       setLoadingProfiles(false);
     }
@@ -108,6 +225,50 @@ const LandingPage = () => {
     }
   };
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !password) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoginLoading(true);
+
+    try {
+      const { data } = await api.post('/auth', { email, password });
+      localStorage.setItem('token', data.token);
+
+      // Store "keep logged in" preference
+      if (keepLoggedIn) {
+        localStorage.setItem('keepLoggedIn', 'true');
+        localStorage.setItem('userEmail', email);
+      } else {
+        localStorage.removeItem('keepLoggedIn');
+        localStorage.removeItem('userEmail');
+      }
+
+      toast({
+        title: "Success!",
+        description: "Logged in successfully.",
+      });
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      toast({
+        title: "Login Failed",
+        description: error.response?.data?.errors?.[0]?.msg || error.response?.data?.msg || "Invalid email or password. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
   const getAge = (dateOfBirth: string) => {
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
@@ -125,56 +286,133 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-warm overflow-hidden">
+    <div className="min-h-screen bg-gradient-warm overflow-hidden relative">
+      {/* Romantic Background Overlay */}
+      <div className="fixed inset-0 bg-romantic-gradient pointer-events-none z-0"></div>
+      <div className="fixed inset-0 bg-heart-pattern pointer-events-none z-0"></div>
+
       {/* Floating Hearts Animation */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {[...Array(8)].map((_, i) => (
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
+        {[...Array(15)].map((_, i) => (
           <Heart
-            key={i}
-            className="absolute text-primary/10 animate-pulse"
+            key={`heart-${i}`}
+            className="absolute text-pink-400/20 animate-float-up"
             style={{
               left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${20 + Math.random() * 40}px`,
-              height: `${20 + Math.random() * 40}px`,
-              animationDelay: `${i * 0.5}s`,
-              animationDuration: `${3 + Math.random() * 2}s`,
+              width: `${15 + Math.random() * 30}px`,
+              height: `${15 + Math.random() * 30}px`,
+              animationDelay: `${i * 2}s`,
+              animationDuration: `${15 + Math.random() * 10}s`,
             }}
             fill="currentColor"
           />
         ))}
       </div>
 
+      {/* Twinkling Hearts */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
+        {[...Array(20)].map((_, i) => (
+          <Heart
+            key={`twinkle-${i}`}
+            className="absolute text-pink-300/30 animate-twinkle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${10 + Math.random() * 20}px`,
+              height: `${10 + Math.random() * 20}px`,
+              animationDelay: `${i * 0.3}s`,
+            }}
+            fill="currentColor"
+          />
+        ))}
+      </div>
+
+      {/* Rose Petals Falling */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
+        {[...Array(10)].map((_, i) => (
+          <div
+            key={`petal-${i}`}
+            className="absolute animate-petal-fall"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${i * 2}s`,
+              animationDuration: `${12 + Math.random() * 8}s`,
+            }}
+          >
+            <div
+              className="w-3 h-3 rounded-full bg-gradient-to-br from-pink-300/40 to-rose-400/40 blur-sm"
+            ></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Glowing Orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-20 left-10 w-64 h-64 bg-pink-300/20 rounded-full blur-3xl animate-pulse-glow"></div>
+        <div className="absolute top-40 right-20 w-80 h-80 bg-rose-200/20 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-20 left-1/4 w-72 h-72 bg-pink-200/15 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-40 right-1/3 w-96 h-96 bg-rose-300/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '3s' }}></div>
+      </div>
+
       {/* Hero Section */}
-      <header className="relative overflow-hidden bg-white flex flex-col">
+      <div
+        className="relative overflow-hidden bg-white flex flex-col min-h-screen bg-cover bg-center"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      >
+        <div className="absolute inset-0 bg-black/50 z-0"></div>
         {/* Elegant Navigation */}
-        <nav className="relative z-10 bg-white border-b border-border/50">
+        <nav className="relative z-10 bg-white border-b border-border/50 shadow-sm">
           <div className="container mx-auto px-4 py-4">
-            <div className="grid grid-cols-3 items-center">
-              <div></div>
-              <div className="flex items-center gap-3 group cursor-pointer justify-self-center">
-                <div className="relative">
-                  <img
-                    src={logo}
-                    alt="MyShagun Logo"
-                    className="relative w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-full border-2 border-primary/20 shadow-md"
-                  />
-                </div>
+            <div className="flex items-center justify-between">
+              {/* Logo */}
+              <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigate("/")}>
                 <div>
-                  <span className="text-2xl sm:text-3xl font-['Playfair_Display'] font-bold text-[#8B4513]">
+                  <span className="text-2xl sm:text-3xl font-['Playfair_Display'] font-bold text-[#8B4513] group-hover:text-[#6B3410] transition-colors">
                     MyShagun
                   </span>
                   <p className="text-xs text-muted-foreground font-['Poppins']">Where Hearts Connect</p>
                 </div>
               </div>
-              <div className="justify-self-end">
+
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-8">
+                <button
+                  onClick={() => navigate("/")}
+                  className="font-['Poppins'] text-[#8B4513] hover:text-[#6B3410] transition-colors font-medium"
+                >
+                  Home
+                </button>
+                <button
+                  onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+                  className="font-['Poppins'] text-[#8B4513] hover:text-[#6B3410] transition-colors font-medium"
+                >
+                  Membership
+                </button>
+                <button
+                  onClick={() => navigate("/contact-us")}
+                  className="font-['Poppins'] text-[#8B4513] hover:text-[#6B3410] transition-colors font-medium"
+                >
+                  Contact Us
+                </button>
+                <Button
+                  variant="default"
+                  onClick={() => navigate("/auth")}
+                  className="font-['Poppins'] bg-[#8B4513] hover:bg-[#6B3410] text-white"
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
+              </div>
+
+              {/* Mobile Navigation Button */}
+              <div className="md:hidden">
                 <Button
                   variant="outline"
-                  onClick={() => (window.location.href = "/auth")}
+                  onClick={() => navigate("/auth")}
                   className="font-['Poppins'] border-[#8B4513]/30 hover:bg-[#8B4513]/5 text-[#8B4513]"
                 >
                   <Heart className="w-4 h-4 mr-2" />
-                  Sign In
+                  Login
                 </Button>
               </div>
             </div>
@@ -182,54 +420,69 @@ const LandingPage = () => {
         </nav>
 
         {/* Hero Content */}
-        <div className="relative z-10 flex-1 flex items-center py-12 sm:py-20 bg-gradient-to-br from-pink-50/30 via-white to-purple-50/20">
-          {/* Floating Hearts */}
+        <div className="relative z-10 flex-1 flex items-center py-12 sm:py-20">
+          {/* Romantic Background Effects */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(6)].map((_, i) => (
+            {/* Large Floating Hearts */}
+            {[...Array(8)].map((_, i) => (
               <Heart
-                key={i}
-                className="absolute text-pink-200/40 animate-pulse"
+                key={`hero-heart-${i}`}
+                className="absolute text-pink-300/25 animate-drift"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
-                  width: `${15 + Math.random() * 25}px`,
-                  height: `${15 + Math.random() * 25}px`,
-                  animationDelay: `${i * 0.5}s`,
-                  animationDuration: `${3 + Math.random() * 2}s`,
+                  width: `${20 + Math.random() * 40}px`,
+                  height: `${20 + Math.random() * 40}px`,
+                  animationDelay: `${i * 1}s`,
                 }}
                 fill="currentColor"
+              />
+            ))}
+
+            {/* Sparkles */}
+            {[...Array(12)].map((_, i) => (
+              <Sparkles
+                key={`sparkle-${i}`}
+                className="absolute text-amber-300/40 animate-twinkle"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  width: `${12 + Math.random() * 20}px`,
+                  height: `${12 + Math.random() * 20}px`,
+                  animationDelay: `${i * 0.4}s`,
+                }}
               />
             ))}
           </div>
 
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-1 gap-8 lg:gap-16 items-center max-w-7xl mx-auto">
               <div className="animate-fade-in text-center lg:text-left space-y-6">
-                <div className="inline-flex items-center gap-2 bg-[#8B4513]/10 rounded-full px-4 py-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-[#8B4513]" />
-                  <span className="text-sm font-['Poppins'] font-medium text-[#8B4513]">
+                <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-2">
+                  <Sparkles className="w-4 h-4 text-white" />
+                  <span className="text-sm font-['Poppins'] font-medium text-white">
                     America's Most Trusted Matrimony Platform
                   </span>
                 </div>
 
                 <h1 className="text-5xl sm:text-6xl lg:text-7xl font-['Playfair_Display'] font-bold leading-tight">
-                  <span className="block text-[#8B4513]">
+                  <span className="block text-white">
                     Find Your Soulmate
                   </span>
                 </h1>
 
                 <div className="space-y-4">
-                  <p className="text-2xl sm:text-3xl font-bold text-[#4A2511] font-['Poppins']">
-                    Millions of Single Women & Single Men Profiles
+                  <p className="text-2xl sm:text-3xl font-bold text-white font-['Poppins']">
+                    Millions of Single Women & Men Profiles
                   </p>
-                  
-                  <p className="text-base sm:text-lg text-[#6B4423] leading-relaxed font-['Poppins']">
-                    Where destiny meets technology. Join the most trusted platform for meaningful connections and
+
+                  <p className="text-base sm:text-lg text-white/80 leading-relaxed font-['Poppins']">
+                    Where destiny meets technology, Join the most trusted platform for meaningful connections and
                     beautiful beginnings.
                   </p>
-                  
-                  <p className="text-base sm:text-lg text-[#8B4513] font-semibold font-['Poppins'] flex items-center justify-center lg:justify-start gap-2">
-                    Your forever starts here. ✨
+
+                  <p className="text-base sm:text-lg text-white font-semibold font-['Poppins'] flex items-center justify-center lg:justify-start gap-2">
+                    Your forever starts here.
                   </p>
                 </div>
 
@@ -245,7 +498,7 @@ const LandingPage = () => {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="text-base sm:text-lg px-8 sm:px-12 py-6 sm:py-7 rounded-full font-['Poppins'] border-[#8B4513]/30 hover:bg-[#8B4513]/5 text-[#8B4513] font-semibold"
+                    className="text-base sm:text-lg px-8 sm:px-12 py-6 sm:py-7 rounded-full font-['Poppins'] border-white/30 hover:bg-white/5 text-white font-semibold"
                     onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
                   >
                     Learn More
@@ -253,27 +506,147 @@ const LandingPage = () => {
                 </div>
               </div>
 
+
+
               <div className="relative animate-scale-in order-first lg:order-last">
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-200/20 to-purple-200/20 rounded-[3rem] blur-3xl"></div>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-400/10 to-pink-400/10 rounded-[2.5rem] blur-xl"></div>
-                  <img
-                    src={heroImage}
-                    alt="Happy couple representing successful matrimonial match"
-                    className="relative rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(139,69,19,0.25)] w-full h-auto object-cover border-4 border-white group-hover:scale-[1.02] transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-amber-900/20 via-transparent to-transparent rounded-[2.5rem]"></div>
-                </div>
+
+                <Card className="bg-white/95 backdrop-blur-sm shadow-2xl border-2 border-[#8B4513]/20">
+                  <CardContent className="p-8">
+                    <div className="text-center mb-6">
+                      <h2 className="text-2xl font-['Playfair_Display'] font-bold text-[#8B4513] mb-2">
+                        Welcome Back
+                      </h2>
+                      <p className="text-muted-foreground font-['Poppins'] text-sm">
+                        Login to find your perfect match
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleLogin} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="login-email" className="font-['Poppins']">
+                          Email / Mobile / User ID
+                        </Label>
+                        <Input
+                          id="login-email"
+                          type="text"
+                          placeholder="Enter your email, mobile or user ID"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="font-['Poppins']"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label htmlFor="login-password" className="font-['Poppins']">
+                            Password
+                          </Label>
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="p-0 h-auto text-xs text-[#8B4513] font-['Poppins']"
+                            onClick={() => navigate("/auth")}
+                          >
+                            Forgot Password?
+                          </Button>
+                        </div>
+                        <Input
+                          id="login-password"
+                          type="password"
+                          placeholder="Enter your password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="font-['Poppins']"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="keep-logged-in-landing"
+                          checked={keepLoggedIn}
+                          onCheckedChange={(checked) => setKeepLoggedIn(checked as boolean)}
+                        />
+                        <label
+                          htmlFor="keep-logged-in-landing"
+                          className="text-sm font-['Poppins'] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          Keep me logged in
+                        </label>
+                      </div>
+
+                      <Button
+                        type="submit"
+                        disabled={loginLoading}
+                        className="w-full bg-[#8B4513] hover:bg-[#6B3410] font-['Poppins'] font-semibold"
+                      >
+                        {loginLoading ? "Logging in..." : "Login Now"}
+                      </Button>
+
+                      <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-white px-2 text-muted-foreground font-['Poppins']">Or</span>
+                        </div>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => navigate("/auth")}
+                        className="w-full border-green-600 text-green-600 hover:bg-green-50 font-['Poppins'] font-semibold"
+                      >
+                        Login With OTP
+                      </Button>
+
+                      <div className="text-center pt-4 border-t">
+                        <p className="text-sm text-muted-foreground font-['Poppins'] mb-3">
+                          New to MyShagun?
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowRegistration(true)}
+                          className="w-full border-[#8B4513]/30 text-[#8B4513] hover:bg-[#8B4513]/5 font-['Poppins'] font-semibold"
+                        >
+                          <Heart className="w-4 h-4 mr-2" />
+                          Create Free Account
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Register Now Section */}
-      <section className="py-20 sm:py-28 bg-white relative overflow-hidden">
+      <section className="py-20 sm:py-28 bg-gradient-to-br from-pink-50/40 via-white to-rose-50/30 relative overflow-hidden">
+        {/* Background Hearts */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(6)].map((_, i) => (
+            <Heart
+              key={`reg-heart-${i}`}
+              className="absolute text-pink-200/20 animate-drift"
+              style={{
+                left: `${10 + i * 15}%`,
+                top: `${20 + Math.random() * 60}%`,
+                width: `${30 + Math.random() * 40}px`,
+                height: `${30 + Math.random() * 40}px`,
+                animationDelay: `${i * 1.5}s`,
+              }}
+              fill="currentColor"
+            />
+          ))}
+        </div>
+
         <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 animate-fade-in-up">
             <h2 className="text-4xl sm:text-5xl font-['Playfair_Display'] font-bold text-center mb-4 text-foreground">
               Register Now
             </h2>
@@ -281,7 +654,7 @@ const LandingPage = () => {
               Create your account in just a few seconds and start your journey to find your soulmate.
             </p>
           </div>
-          <Card className="max-w-2xl mx-auto p-8 shadow-lg">
+          <Card className="max-w-2xl mx-auto p-8 shadow-lg animate-scale-in animation-delay-200">
             <form onSubmit={handleRegister}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
@@ -339,6 +712,49 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Animated Stats Counter - Commented out for future use */}
+      {/* <section
+        className="py-20 bg-gradient-to-br from-[#8B4513]/5 via-pink-50/50 to-purple-50/30 relative overflow-hidden"
+        onMouseEnter={() => !statsVisible && setStatsVisible(true)}
+      >
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-['Playfair_Display'] font-bold text-foreground mb-4">
+              Trusted by Millions
+            </h2>
+            <p className="text-lg text-muted-foreground font-['Poppins']">
+              Join the fastest-growing matrimonial platform
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center p-8 bg-white rounded-3xl shadow-lg border-2 border-[#8B4513]/10 hover:shadow-2xl transition-all hover:-translate-y-2">
+              <div className="text-5xl font-bold text-[#8B4513] mb-2 font-['Playfair_Display']">
+                {stats.matches > 0 ? `${(stats.matches / 1000000).toFixed(1)}M+` : '6M+'}
+              </div>
+              <div className="text-lg font-semibold text-foreground font-['Poppins']">Happy Matches</div>
+              <div className="text-sm text-muted-foreground font-['Poppins'] mt-1">Successful connections made</div>
+            </div>
+
+            <div className="text-center p-8 bg-white rounded-3xl shadow-lg border-2 border-[#8B4513]/10 hover:shadow-2xl transition-all hover:-translate-y-2">
+              <div className="text-5xl font-bold text-[#8B4513] mb-2 font-['Playfair_Display']">
+                {stats.users > 0 ? `${(stats.users / 1000).toFixed(0)}K+` : '100K+'}
+              </div>
+              <div className="text-lg font-semibold text-foreground font-['Poppins']">Active Users</div>
+              <div className="text-sm text-muted-foreground font-['Poppins'] mt-1">Looking for their soulmate</div>
+            </div>
+
+            <div className="text-center p-8 bg-white rounded-3xl shadow-lg border-2 border-[#8B4513]/10 hover:shadow-2xl transition-all hover:-translate-y-2">
+              <div className="text-5xl font-bold text-[#8B4513] mb-2 font-['Playfair_Display']">
+                {stats.success > 0 ? `${stats.success}%` : '98%'}
+              </div>
+              <div className="text-lg font-semibold text-foreground font-['Poppins']">Success Rate</div>
+              <div className="text-sm text-muted-foreground font-['Poppins'] mt-1">Find their perfect match</div>
+            </div>
+          </div>
+        </div>
+      </section> */}
+
       {/* Why Register Features */}
       <section className="py-16 bg-white relative overflow-hidden">
         <div className="container mx-auto px-4">
@@ -378,19 +794,54 @@ const LandingPage = () => {
         </div>
       </section>
 
-      
+
       {/* Features Section */}
-      <section id="features" className="py-20 sm:py-28 bg-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(var(--primary-rgb),0.1),transparent)]"></div>
+      <section id="features" className="py-20 sm:py-28 bg-gradient-to-br from-rose-50/30 via-pink-50/20 to-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,182,193,0.15),transparent)]"></div>
+
+        {/* Floating Elements */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={`feature-elem-${i}`}
+              className="absolute"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+            >
+              {i % 2 === 0 ? (
+                <Heart
+                  className="text-pink-300/15 animate-pulse-glow"
+                  style={{
+                    width: `${25 + Math.random() * 35}px`,
+                    height: `${25 + Math.random() * 35}px`,
+                    animationDelay: `${i * 0.7}s`,
+                  }}
+                  fill="currentColor"
+                />
+              ) : (
+                <Sparkles
+                  className="text-rose-300/20 animate-twinkle"
+                  style={{
+                    width: `${20 + Math.random() * 30}px`,
+                    height: `${20 + Math.random() * 30}px`,
+                    animationDelay: `${i * 0.6}s`,
+                  }}
+                />
+              )}
+            </div>
+          ))}
+        </div>
 
         <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 animate-fade-in-up">
             <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-4">
               <Star className="w-4 h-4 text-primary fill-current" />
               <span className="text-sm font-['Poppins'] font-medium text-primary">Premium Features</span>
             </div>
             <h2 className="text-4xl sm:text-5xl font-['Playfair_Display'] font-bold text-center mb-4 text-foreground">
-              Why Lovebirds Choose Us
+              Why Lovebirds Choose Us?
             </h2>
             <p className="text-center text-muted-foreground text-lg max-w-2xl mx-auto font-['Poppins']">
               Experience the perfect blend of tradition and technology
@@ -398,7 +849,7 @@ const LandingPage = () => {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="group bg-card p-8 rounded-3xl shadow-soft hover:shadow-glow transition-all duration-300 border border-border hover:border-primary/30 hover:-translate-y-2">
+            <div className="group bg-card p-8 rounded-3xl shadow-soft hover:shadow-glow transition-all duration-300 border border-border hover:border-primary/30 hover:-translate-y-2 animate-fade-in animation-delay-200">
               <div className="bg-gradient-to-br from-primary/20 to-accent/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Users className="w-8 h-8 text-primary" />
               </div>
@@ -410,7 +861,7 @@ const LandingPage = () => {
               </p>
             </div>
 
-            <div className="group bg-card p-8 rounded-3xl shadow-soft hover:shadow-glow transition-all duration-300 border border-border hover:border-primary/30 hover:-translate-y-2">
+            <div className="group bg-card p-8 rounded-3xl shadow-soft hover:shadow-glow transition-all duration-300 border border-border hover:border-primary/30 hover:-translate-y-2 animate-fade-in animation-delay-400">
               <div className="bg-gradient-to-br from-primary/20 to-accent/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Lock className="w-8 h-8 text-primary" />
               </div>
@@ -420,7 +871,7 @@ const LandingPage = () => {
               </p>
             </div>
 
-            <div className="group bg-card p-8 rounded-3xl shadow-soft hover:shadow-glow transition-all duration-300 border border-border hover:border-primary/30 hover:-translate-y-2">
+            <div className="group bg-card p-8 rounded-3xl shadow-soft hover:shadow-glow transition-all duration-300 border border-border hover:border-primary/30 hover:-translate-y-2 animate-fade-in animation-delay-600">
               <div className="bg-gradient-to-br from-primary/20 to-accent/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Sparkles className="w-8 h-8 text-primary" />
               </div>
@@ -430,7 +881,7 @@ const LandingPage = () => {
               </p>
             </div>
 
-            <div className="group bg-card p-8 rounded-3xl shadow-soft hover:shadow-glow transition-all duration-300 border border-border hover:border-primary/30 hover:-translate-y-2">
+            <div className="group bg-card p-8 rounded-3xl shadow-soft hover:shadow-glow transition-all duration-300 border border-border hover:border-primary/30 hover:-translate-y-2 animate-fade-in animation-delay-800">
               <div className="bg-gradient-to-br from-primary/20 to-accent/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <MessageCircle className="w-8 h-8 text-primary" />
               </div>
@@ -444,11 +895,32 @@ const LandingPage = () => {
       </section>
 
       {/* Featured Profiles */}
-      <section className="py-20 sm:py-28 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+      <section className="py-20 sm:py-28 bg-gradient-to-br from-white via-pink-50/20 to-rose-50/25 relative overflow-hidden">
+        {/* Romantic Background */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-10 right-10 w-72 h-72 bg-pink-200/20 rounded-full blur-3xl animate-pulse-glow"></div>
+          <div className="absolute bottom-20 left-10 w-96 h-96 bg-rose-200/15 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
+
+          {[...Array(10)].map((_, i) => (
+            <Heart
+              key={`profile-heart-${i}`}
+              className="absolute text-pink-200/20 animate-float-up"
+              style={{
+                left: `${Math.random() * 100}%`,
+                width: `${12 + Math.random() * 20}px`,
+                height: `${12 + Math.random() * 20}px`,
+                animationDelay: `${i * 3}s`,
+                animationDuration: `${18 + Math.random() * 8}s`,
+              }}
+              fill="currentColor"
+            />
+          ))}
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16 animate-fade-in-up">
             <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-4">
-              <Heart className="w-4 h-4 text-primary fill-current" />
+              <Heart className="w-4 h-4 text-primary fill-current animate-float" />
               <span className="text-sm font-['Poppins'] font-medium text-primary">Find Your Soulmate</span>
             </div>
             <h2 className="text-4xl sm:text-5xl font-['Playfair_Display'] font-bold mb-4">
@@ -483,18 +955,26 @@ const LandingPage = () => {
             <CarouselContent className="-ml-2 md:-ml-4">
               {featuredProfiles.map((profile) => (
                 <CarouselItem key={profile.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
-                  <Card className="overflow-hidden transition-all group border-2 border-transparent hover:border-primary/50 hover:shadow-lg">
+                  <Card className="overflow-hidden transition-all duration-500 group border-2 border-transparent hover:border-primary/50 hover:shadow-2xl hover:scale-105 transform">
                     <div className="relative">
                       <img
                         src={profile.profile_photo_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop&q=80"}
                         alt={`${profile.first_name} ${profile.last_name}`}
-                        className="w-full h-60 object-cover filter blur-3xl"
+                        className="w-full h-60 object-cover filter blur-[8px] brightness-90"
                         onError={(e) => {
                           e.currentTarget.src = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop&q=80";
                         }}
                       />
-                      <div className="absolute inset-0 bg-black/20"></div>
-                      <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-md">Premium</div>
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50"></div>
+                      <div className="absolute inset-0 backdrop-blur-sm"></div>
+                      <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-current" />
+                        Premium
+                      </div>
+                      <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full">
+                        <Lock className="w-3 h-3 inline mr-1" />
+                        Private
+                      </div>
                     </div>
                     <div className="p-4 text-center bg-white">
                       <h3 className="text-lg font-bold">{getPartialName(profile.first_name)}</h3>
@@ -533,11 +1013,11 @@ const LandingPage = () => {
     </section>
 
       {/* Success Stories */}
-      {/* <section className="py-20 sm:py-28 bg-white">
+      <section className="py-20 sm:py-28 bg-gradient-to-br from-pink-50/50 via-white to-purple-50/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-4">
-              <Heart className="w-4 h-4 text-primary fill-current" />
+              <Heart className="w-4 h-4 text-primary fill-current animate-pulse" />
               <span className="text-sm font-['Poppins'] font-medium text-primary">Real Love Stories</span>
             </div>
             <h2 className="text-4xl sm:text-5xl font-['Playfair_Display'] font-bold mb-4">Happily Ever Afters</h2>
@@ -572,37 +1052,46 @@ const LandingPage = () => {
             ].map((story, idx) => (
               <div
                 key={idx}
-                className="bg-card p-8 rounded-3xl shadow-soft border border-border hover:shadow-glow transition-all hover:-translate-y-1 duration-300"
+                className="group bg-white p-8 rounded-3xl shadow-lg border-2 border-[#8B4513]/10 hover:shadow-2xl hover:border-[#8B4513]/30 transition-all hover:-translate-y-2 duration-300"
               >
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-primary fill-current" />
+                    <Star key={i} className="w-5 h-5 text-amber-500 fill-current drop-shadow-sm" />
                   ))}
                 </div>
-                <p className="text-muted-foreground mb-6 font-['Poppins'] italic leading-relaxed">"{story.story}"</p>
+                <p className="text-muted-foreground mb-6 font-['Poppins'] italic leading-relaxed text-base">"{story.story}"</p>
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-3">
-                    <img 
-                      src={story.photo1} 
-                      alt={story.name.split(' & ')[0]}
-                      className="w-14 h-14 rounded-full border-3 border-card object-cover shadow-lg"
-                    />
-                    <img 
-                      src={story.photo2} 
-                      alt={story.name.split(' & ')[1]}
-                      className="w-14 h-14 rounded-full border-3 border-card object-cover shadow-lg"
-                    />
+                    <div className="relative">
+                      <img
+                        src={story.photo1}
+                        alt={story.name.split(' & ')[0]}
+                        className="w-16 h-16 rounded-full border-4 border-white object-cover shadow-xl ring-2 ring-[#8B4513]/20"
+                      />
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+                    </div>
+                    <div className="relative">
+                      <img
+                        src={story.photo2}
+                        alt={story.name.split(' & ')[1]}
+                        className="w-16 h-16 rounded-full border-4 border-white object-cover shadow-xl ring-2 ring-[#8B4513]/20"
+                      />
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+                    </div>
                   </div>
                   <div>
-                    <p className="font-['Playfair_Display'] font-bold text-foreground">{story.name}</p>
-                    <p className="text-sm text-muted-foreground font-['Poppins']">{story.location}</p>
+                    <p className="font-['Playfair_Display'] font-bold text-foreground text-lg">{story.name}</p>
+                    <p className="text-sm text-muted-foreground font-['Poppins'] flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {story.location}
+                    </p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </section> */}
+      </section>
 
       {/* Join Happy Users Section */}
       <section className="py-20 sm:py-28 bg-card/30 relative overflow-hidden">
@@ -629,8 +1118,26 @@ const LandingPage = () => {
       </section>
 
       {/* Download App Section */}
-      <section className="py-20 sm:py-28 bg-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent"></div>
+      <section className="py-20 sm:py-28 bg-gradient-to-br from-pink-50/30 via-white to-rose-50/25 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pink-200/10 to-transparent"></div>
+
+        {/* Romantic Background Elements */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(12)].map((_, i) => (
+            <Heart
+              key={`download-heart-${i}`}
+              className="absolute text-pink-300/15 animate-twinkle"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${15 + Math.random() * 25}px`,
+                height: `${15 + Math.random() * 25}px`,
+                animationDelay: `${i * 0.5}s`,
+              }}
+              fill="currentColor"
+            />
+          ))}
+        </div>
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-5xl mx-auto bg-gradient-romantic rounded-[3rem] p-8 sm:p-16 shadow-glow border border-primary/20">
@@ -694,6 +1201,26 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-8 right-8 z-50 group">
+        <Button
+          size="lg"
+          onClick={() => setShowRegistration(true)}
+          className="bg-gradient-to-r from-[#8B4513] to-[#A0522D] hover:from-[#6B3410] hover:to-[#8B4513] text-white rounded-full shadow-2xl px-6 py-6 font-['Poppins'] font-semibold flex items-center gap-2 animate-pulse hover:animate-none transition-all hover:scale-110"
+        >
+          <Heart className="w-5 h-5 fill-current" />
+          <span className="hidden sm:inline">Register Free</span>
+        </Button>
+
+        {/* Tooltip */}
+        <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
+          <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap">
+            Start Your Journey Today!
+            <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+          </div>
+        </div>
+      </div>
 
       {/* Registration Modal */}
       <RegistrationForm open={showRegistration} onClose={() => setShowRegistration(false)} />

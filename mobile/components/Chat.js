@@ -8,10 +8,13 @@ import {
     StyleSheet,
     KeyboardAvoidingView,
     Platform,
-    ActivityIndicator
+    ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import api from '../config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Avatar from './ui/Avatar';
 
 const Chat = ({ route, navigation }) => {
     const { conversationId, otherUserId, otherUserName } = route.params;
@@ -27,7 +30,7 @@ const Chat = ({ route, navigation }) => {
     useEffect(() => {
         navigation.setOptions({ title: otherUserName });
         fetchUserAndMessages();
-        const interval = setInterval(fetchMessages, 2000); // Poll every 2s
+        const interval = setInterval(fetchMessages, 2000);
         return () => clearInterval(interval);
     }, []);
 
@@ -55,36 +58,55 @@ const Chat = ({ route, navigation }) => {
     const handleSendMessage = async () => {
         if (!newMessage.trim()) return;
 
+        const messageText = newMessage.trim();
         setSending(true);
+        setNewMessage('');
+
         try {
             await api.post('/chat/send', {
                 receiverId: otherUserId,
-                message: newMessage.trim()
+                message: messageText
             });
 
-            setNewMessage('');
             await fetchMessages();
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
         } catch (error) {
             console.error('Error sending message:', error);
+            setNewMessage(messageText);
         } finally {
             setSending(false);
         }
     };
 
-    const renderMessage = ({ item }) => {
+    const renderMessage = ({ item, index }) => {
         const isOwnMessage = item.sender_id === currentUserId;
+        const prevMessage = index > 0 ? messages[index - 1] : null;
+        const showAvatar = !prevMessage || prevMessage.sender_id !== item.sender_id;
 
         return (
             <View
                 style={[
-                    styles.messageContainer,
-                    isOwnMessage ? styles.ownMessageContainer : styles.otherMessageContainer
+                    styles.messageRow,
+                    isOwnMessage ? styles.ownMessageRow : styles.otherMessageRow
                 ]}
             >
+                {!isOwnMessage && (
+                    <View style={styles.avatarContainer}>
+                        {showAvatar ? (
+                            <Avatar uri={null} size="sm" name={otherUserName} />
+                        ) : (
+                            <View style={styles.avatarPlaceholder} />
+                        )}
+                    </View>
+                )}
+
                 <View
                     style={[
                         styles.messageBubble,
-                        isOwnMessage ? styles.ownMessageBubble : styles.otherMessageBubble
+                        isOwnMessage ? styles.ownMessageBubble : styles.otherMessageBubble,
+                        !showAvatar && styles.messageBubbleGrouped,
                     ]}
                 >
                     <Text
@@ -107,6 +129,8 @@ const Chat = ({ route, navigation }) => {
                         })}
                     </Text>
                 </View>
+
+                {isOwnMessage && <View style={styles.avatarPlaceholder} />}
             </View>
         );
     };
@@ -125,30 +149,62 @@ const Chat = ({ route, navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
-            <FlatList
-                ref={flatListRef}
-                data={messages}
-                renderItem={renderMessage}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.messagesContainer}
-                onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
-            />
+            {messages.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                    <View style={styles.emptyIconContainer}>
+                        <Ionicons name="chatbubble-ellipses-outline" size={60} color="#ec4899" />
+                    </View>
+                    <Text style={styles.emptyTitle}>Start the conversation!</Text>
+                    <Text style={styles.emptyText}>
+                        Send a message to {otherUserName.split(' ')[0]}
+                    </Text>
+                </View>
+            ) : (
+                <FlatList
+                    ref={flatListRef}
+                    data={messages}
+                    renderItem={renderMessage}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.messagesContainer}
+                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                    showsVerticalScrollIndicator={false}
+                    inverted={false}
+                />
+            )}
 
             <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    value={newMessage}
-                    onChangeText={setNewMessage}
-                    placeholder="Type a message..."
-                    multiline
-                    maxLength={500}
-                />
+                <View style={styles.inputWrapper}>
+                    <TextInput
+                        style={styles.input}
+                        value={newMessage}
+                        onChangeText={setNewMessage}
+                        placeholder="Type a message..."
+                        placeholderTextColor="#9ca3af"
+                        multiline
+                        maxLength={500}
+                    />
+                </View>
+
                 <TouchableOpacity
-                    style={[styles.sendButton, (!newMessage.trim() || sending) && styles.sendButtonDisabled]}
+                    style={styles.sendButtonWrapper}
                     onPress={handleSendMessage}
                     disabled={!newMessage.trim() || sending}
+                    activeOpacity={0.8}
                 >
-                    <Text style={styles.sendButtonText}>{sending ? '...' : '➤'}</Text>
+                    <LinearGradient
+                        colors={
+                            !newMessage.trim() || sending
+                                ? ['#d1d5db', '#9ca3af']
+                                : ['#ec4899', '#db2777']
+                        }
+                        style={styles.sendButton}
+                    >
+                        {sending ? (
+                            <ActivityIndicator size="small" color="white" />
+                        ) : (
+                            <Ionicons name="send" size={20} color="white" />
+                        )}
+                    </LinearGradient>
                 </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>
@@ -164,33 +220,86 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#fef2f2',
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 32,
+    },
+    emptyIconContainer: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    emptyTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#1f2937',
+        marginBottom: 8,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#6b7280',
+        textAlign: 'center',
     },
     messagesContainer: {
         padding: 16,
+        paddingBottom: 8,
     },
-    messageContainer: {
-        marginBottom: 12,
-        maxWidth: '80%',
+    messageRow: {
+        flexDirection: 'row',
+        marginBottom: 8,
+        alignItems: 'flex-end',
     },
-    ownMessageContainer: {
-        alignSelf: 'flex-end',
+    ownMessageRow: {
+        justifyContent: 'flex-end',
     },
-    otherMessageContainer: {
-        alignSelf: 'flex-start',
+    otherMessageRow: {
+        justifyContent: 'flex-start',
+    },
+    avatarContainer: {
+        marginRight: 8,
+        marginBottom: 2,
+    },
+    avatarPlaceholder: {
+        width: 40,
     },
     messageBubble: {
+        maxWidth: '70%',
         paddingHorizontal: 16,
         paddingVertical: 10,
         borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 1,
+    },
+    messageBubbleGrouped: {
+        marginTop: 2,
     },
     ownMessageBubble: {
         backgroundColor: '#ec4899',
+        borderBottomRightRadius: 4,
     },
     otherMessageBubble: {
         backgroundColor: 'white',
+        borderBottomLeftRadius: 4,
     },
     messageText: {
         fontSize: 16,
+        lineHeight: 22,
     },
     ownMessageText: {
         color: 'white',
@@ -199,11 +308,13 @@ const styles = StyleSheet.create({
         color: '#1f2937',
     },
     messageTime: {
-        fontSize: 10,
+        fontSize: 11,
         marginTop: 4,
+        fontWeight: '500',
     },
     ownMessageTime: {
-        color: 'rgba(255,255,255,0.7)',
+        color: 'rgba(255, 255, 255, 0.8)',
+        textAlign: 'right',
     },
     otherMessageTime: {
         color: '#9ca3af',
@@ -211,12 +322,13 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         padding: 12,
+        paddingBottom: Platform.OS === 'ios' ? 16 : 12,
         backgroundColor: 'white',
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
-        alignItems: 'center',
+        borderTopColor: '#f3f4f6',
+        alignItems: 'flex-end',
     },
-    input: {
+    inputWrapper: {
         flex: 1,
         backgroundColor: '#f3f4f6',
         borderRadius: 24,
@@ -225,21 +337,20 @@ const styles = StyleSheet.create({
         marginRight: 8,
         maxHeight: 100,
     },
+    input: {
+        fontSize: 16,
+        color: '#1f2937',
+        maxHeight: 80,
+    },
+    sendButtonWrapper: {
+        marginBottom: 2,
+    },
     sendButton: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: '#ec4899',
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    sendButtonDisabled: {
-        opacity: 0.5,
-    },
-    sendButtonText: {
-        color: 'white',
-        fontSize: 20,
-        fontWeight: 'bold',
     },
 });
 

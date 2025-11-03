@@ -33,6 +33,13 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
+// @route   GET api/health
+// @desc    Health check endpoint
+// @access  Public
+router.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
 // @route   POST api/auth
 // @desc    Authenticate user & get token
 // @access  Public

@@ -19,16 +19,40 @@ const Footer = () => {
               Your trusted partner in finding true love and building meaningful relationships.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <a
+                href="https://www.facebook.com/myshagun"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Visit our Facebook page"
+              >
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <a
+                href="https://www.instagram.com/myshagun"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Visit our Instagram profile"
+              >
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <a
+                href="https://twitter.com/myshagun"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Visit our Twitter profile"
+              >
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <a
+                href="https://www.linkedin.com/company/myshagun"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Visit our LinkedIn page"
+              >
                 <Linkedin className="w-5 h-5" />
               </a>
             </div>
@@ -49,14 +73,14 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/about-us" className="text-muted-foreground hover:text-primary transition-colors">
                   About Us
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/browse" className="text-muted-foreground hover:text-primary transition-colors">
                   Success Stories
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -66,24 +90,24 @@ const Footer = () => {
             <h3 className="text-lg font-semibold text-foreground">Support</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/contact-us" className="text-muted-foreground hover:text-primary transition-colors">
                   Help Center
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/terms-of-service" className="text-muted-foreground hover:text-primary transition-colors">
                   Terms of Service
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/contact-us" className="text-muted-foreground hover:text-primary transition-colors">
                   Contact Us
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -94,15 +118,32 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-muted-foreground">
                 <MapPin className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <span>30 N Gould St, Sheridan, WY, 82801, USA</span>
+                <a
+                  href="https://maps.google.com/?q=30+N+Gould+St,+Sheridan,+WY,+82801,+USA"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors"
+                >
+                  30 N Gould St, Sheridan, WY, 82801, USA
+                </a>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="w-5 h-5 flex-shrink-0" />
-                <span>+1 (888) 927 7072</span>
+                <a
+                  href="tel:+18889277072"
+                  className="hover:text-primary transition-colors"
+                >
+                  +1 (888) 927 7072
+                </a>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="w-5 h-5 flex-shrink-0" />
-                <span>info@myshaagun.com</span>
+                <a
+                  href="mailto:info@myshaagun.com"
+                  className="hover:text-primary transition-colors"
+                >
+                  info@myshaagun.com
+                </a>
               </li>
             </ul>
           </div>
@@ -115,12 +156,12 @@ const Footer = () => {
               © {currentYear} MyShagun. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <Link to="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors">
                 Cookie Policy
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              </Link>
+              <Link to="/about-us" className="text-muted-foreground hover:text-primary transition-colors">
                 Sitemap
-              </a>
+              </Link>
             </div>
           </div>
         </div>

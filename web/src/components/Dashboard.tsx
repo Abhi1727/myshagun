@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
 import { User, LogOut, Settings, Heart, MessageCircle } from "lucide-react";
-import logo from "@/assets/logo.png";
+import Footer from "./Footer";
 
 interface Profile {
   id: string;
@@ -22,13 +22,11 @@ interface Profile {
   profile_photo_url?: string | null;
 }
 
-import { getFeaturedProfiles } from "@/lib/api";
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
-  const [featuredProfiles, setFeaturedProfiles] = useState<Profile[]>([]);
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,8 +34,8 @@ const Dashboard = () => {
       try {
         const { data: userData } = await api.get('/auth');
         setCurrentUser(userData);
-        const { data: profilesData } = await getFeaturedProfiles();
-        setFeaturedProfiles(profilesData);
+        const { data: profilesData } = await api.get('/profiles');
+        setAllProfiles(profilesData.filter((p: Profile) => p.id !== userData.id));
       } catch (error) {
         navigate("/auth");
       } finally {
@@ -47,6 +45,22 @@ const Dashboard = () => {
 
     fetchData();
   }, [navigate]);
+
+  const handleLike = async (profileId: string) => {
+    try {
+      await api.post(`/profiles/${profileId}/like`);
+      toast({
+        title: "Success!",
+        description: "Profile liked successfully",
+      });
+    } catch (error) {
+      console.error("Like failed:", error);
+    }
+  };
+
+  const handleChat = (profileId: string) => {
+    navigate(`/messages`);
+  };
 
   const handleSignOut = () => {
     localStorage.removeItem("token");
@@ -76,14 +90,10 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-warm">
       <header className="bg-card/95 border-b border-border sticky top-0 z-50 backdrop-blur-md shadow-sm">
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/")}>
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg"></div>
-              <img src={logo} alt="MyShagun Logo" className="relative w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full border-2 border-primary/30 shadow-lg" />
-            </div>
+          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={() => navigate("/")}>
             <div>
-              <span className="text-lg sm:text-xl font-['Playfair_Display'] font-bold bg-gradient-romantic bg-clip-text text-transparent">MyShagun</span>
-              <p className="text-xs text-muted-foreground font-['Poppins'] hidden xs:block">Dashboard</p>
+              <span className="text-2xl sm:text-3xl font-['Playfair_Display'] font-bold text-[#8B4513] group-hover:text-[#6B3410] transition-colors">MyShagun</span>
+              <p className="text-xs text-muted-foreground font-['Poppins']">Where Hearts Connect</p>
             </div>
           </div>
           <div className="flex gap-1 sm:gap-2">
@@ -172,30 +182,31 @@ const Dashboard = () => {
                       </Card>
           
                       <section className="mt-8 sm:mt-10">
-                        <h3 className="text-xl sm:text-2xl font-['Playfair_Display'] font-bold text-center mb-6 text-gray-800">Featured Profiles</h3>
+                        <h3 className="text-xl sm:text-2xl font-['Playfair_Display'] font-bold text-center mb-6 text-gray-800">
+                          Discover Profiles ({allProfiles.length})
+                        </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                          {featuredProfiles.map((profile) => (
-                                              <Card key={profile.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out border-primary/20 relative group">
-                                                <div className="relative h-40 sm:h-48 bg-gradient-to-br from-purple-200 via-pink-200 to-red-200 flex items-center justify-center">
+                          {allProfiles.map((profile) => (
+                                              <Card key={profile.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border-primary/20 group">
+                                                <div className="relative h-48 sm:h-56 bg-gradient-to-br from-purple-200 via-pink-200 to-red-200">
                                                   {profile.profile_photo_url ? (
-                                                    <img 
-                                                      src={profile.profile_photo_url} 
+                                                    <img
+                                                      src={profile.profile_photo_url}
                                                       alt={`${profile.first_name} ${profile.last_name}`}
-                                                      className="w-full h-full object-cover absolute inset-0 blur-lg transition-all duration-300"
+                                                      className="w-full h-full object-cover"
                                                     />
                                                   ) : (
-                                                    <User className="w-16 h-16 text-primary/60" />
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                      <User className="w-16 h-16 text-primary/60" />
+                                                    </div>
                                                   )}
-                                                  <div className="absolute inset-0 bg-black/40 flex items-end p-3 sm:p-4 group-hover:bg-black/20 transition-all duration-300">
-                                                    <h4 className="text-lg sm:text-xl font-['Playfair_Display'] font-bold text-white leading-tight">
+                                                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-4">
+                                                    <h4 className="text-xl font-['Playfair_Display'] font-bold text-white">
                                                       {profile.first_name} {profile.last_name}
                                                     </h4>
                                                   </div>
-                                                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 group-hover:bg-black/40 transition-all duration-300 opacity-100 group-hover:opacity-0">
-                                                    <Button className="bg-white text-primary hover:bg-gray-100 font-bold py-2 px-4 rounded-full shadow-lg">View Premium</Button>
-                                                  </div>
                                                 </div>
-                                                <CardContent className="p-4 sm:p-5 space-y-2 opacity-20 group-hover:opacity-100 transition-all duration-300">
+                                                <CardContent className="p-4 space-y-2">
                                                   <p className="text-sm text-muted-foreground font-['Poppins']">
                                                     <span className="font-semibold text-gray-700">Age:</span> {profile.date_of_birth ? getAge(profile.date_of_birth) : 'N/A'}
                                                   </p>
@@ -205,12 +216,33 @@ const Dashboard = () => {
                                                   <p className="text-sm text-muted-foreground font-['Poppins']">
                                                     <span className="font-semibold text-gray-700">City:</span> {profile.city || 'N/A'}
                                                   </p>
+                                                  <div className="flex gap-2 mt-4">
+                                                    <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      className="flex-1 gap-1 border-[#8B4513]/30 hover:bg-[#8B4513]/5"
+                                                      onClick={() => handleLike(profile.id)}
+                                                    >
+                                                      <Heart className="w-4 h-4" />
+                                                      Like
+                                                    </Button>
+                                                    <Button
+                                                      size="sm"
+                                                      className="flex-1 gap-1 bg-[#8B4513] hover:bg-[#6B3410]"
+                                                      onClick={() => handleChat(profile.id)}
+                                                    >
+                                                      <MessageCircle className="w-4 h-4" />
+                                                      Chat
+                                                    </Button>
+                                                  </div>
                                                 </CardContent>                            </Card>
                           ))}
                         </div>
                       </section>
                     </div>
-                  </main>    </div>
+                  </main>
+      <Footer />
+    </div>
   );
 };
 

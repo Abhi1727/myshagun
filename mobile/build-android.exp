@@ -1,0 +1,6 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+spawn eas build --platform android --profile preview
+expect "Generate a new Android Keystore?" { send "Y\r" }
+expect eof

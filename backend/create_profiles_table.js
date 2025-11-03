@@ -30,7 +30,8 @@ CREATE TABLE profiles (
     smoking VARCHAR(255),
     drinking VARCHAR(255),
     state VARCHAR(255),
-    interested_for VARCHAR(255)
+    interested_for VARCHAR(255),
+    interested_in VARCHAR(255)
 );
 `;
 

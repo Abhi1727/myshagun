@@ -18,7 +18,7 @@ services:
     networks:
       - myshagun-network
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5001/api/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5001/api/auth/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -28,12 +28,14 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: https://api.myshagun.us/api
     image: abhishek1727/myshagun-web:latest
     container_name: myshagun-web
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80" # Map host port 8080 to container port 80
+
     depends_on:
       - backend
     networks:

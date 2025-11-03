@@ -15,4 +15,17 @@ router.get('/featured', async (req, res) => {
     }
 });
 
+// @route   GET api/profiles
+// @desc    Get all profiles (for logged-in users)
+// @access  Private
+router.get('/', async (req, res) => {
+    try {
+        const [profiles] = await db.query('SELECT * FROM profiles ORDER BY created_at DESC');
+        res.json(profiles);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
 module.exports = router;

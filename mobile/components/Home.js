@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import SwipeProfiles from './SwipeProfiles';
 import Messages from './Messages';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Button from './ui/Button';
 
 const Tab = createBottomTabNavigator();
 
@@ -15,10 +17,19 @@ const ProfileScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            <View style={styles.profileIconContainer}>
+                <Ionicons name="person-circle-outline" size={100} color="#ec4899" />
+            </View>
             <Text style={styles.title}>My Profile</Text>
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.subtitle}>Profile settings coming soon</Text>
+            <Button
+                onPress={handleLogout}
+                variant="outline"
+                style={styles.logoutButton}
+            >
+                <Ionicons name="log-out-outline" size={20} color="#ec4899" style={{ marginRight: 8 }} />
                 <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
+            </Button>
         </View>
     );
 };
@@ -42,7 +53,9 @@ const Home = () => {
                 options={{
                     title: 'Browse',
                     tabBarLabel: 'Browse',
-                    tabBarIcon: () => <Text style={{ fontSize: 24 }}>♥</Text>,
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="heart" size={size} color={color} />
+                    ),
                 }}
             />
             <Tab.Screen
@@ -51,7 +64,9 @@ const Home = () => {
                 options={{
                     title: 'Messages',
                     tabBarLabel: 'Messages',
-                    tabBarIcon: () => <Text style={{ fontSize: 24 }}>💬</Text>,
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="chatbubbles" size={size} color={color} />
+                    ),
                 }}
             />
             <Tab.Screen
@@ -60,7 +75,9 @@ const Home = () => {
                 options={{
                     title: 'Profile',
                     tabBarLabel: 'Profile',
-                    tabBarIcon: () => <Text style={{ fontSize: 24 }}>👤</Text>,
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="person" size={size} color={color} />
+                    ),
                 }}
             />
         </Tab.Navigator>
@@ -73,22 +90,41 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#fef2f2',
+        padding: 24,
+    },
+    profileIconContainer: {
+        width: 140,
+        height: 140,
+        borderRadius: 70,
+        backgroundColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 5,
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#ec4899',
+        color: '#1f2937',
+        marginBottom: 8,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#6b7280',
         marginBottom: 32,
     },
     logoutButton: {
-        backgroundColor: '#ef4444',
-        paddingHorizontal: 32,
-        paddingVertical: 12,
-        borderRadius: 24,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 28,
     },
     logoutText: {
-        color: 'white',
-        fontWeight: 'bold',
+        color: '#ec4899',
+        fontWeight: '600',
         fontSize: 16,
     },
 });

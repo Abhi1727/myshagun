@@ -4,19 +4,23 @@ import {
     Text,
     Image,
     StyleSheet,
-    TouchableOpacity,
+    Dimensions,
     ActivityIndicator,
     Alert,
-    Dimensions
+    TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../config/api';
+import Button from './ui/Button';
 
-const { width, height } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH * 0.9;
 
 const SwipeProfiles = ({ navigation }) => {
     const [profiles, setProfiles] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [liking, setLiking] = useState(false);
 
     useEffect(() => {
         fetchProfiles();
@@ -46,9 +50,10 @@ const SwipeProfiles = ({ navigation }) => {
     };
 
     const handleLike = async () => {
-        if (currentIndex >= profiles.length) return;
+        if (currentIndex >= profiles.length || liking) return;
 
         const profile = profiles[currentIndex];
+        setLiking(true);
 
         try {
             const { data } = await api.post('/chat/like', { likedUserId: profile.id });
@@ -64,6 +69,8 @@ const SwipeProfiles = ({ navigation }) => {
             setCurrentIndex(currentIndex + 1);
         } catch (error) {
             Alert.alert('Error', 'Failed to like profile');
+        } finally {
+            setLiking(false);
         }
     };
 
@@ -82,14 +89,12 @@ const SwipeProfiles = ({ navigation }) => {
     if (currentIndex >= profiles.length) {
         return (
             <View style={styles.emptyContainer}>
+                <Ionicons name="heart-dislike" size={80} color="#ec4899" />
                 <Text style={styles.emptyTitle}>No More Profiles</Text>
                 <Text style={styles.emptyText}>Check back later for new matches!</Text>
-                <TouchableOpacity
-                    style={styles.resetButton}
-                    onPress={() => setCurrentIndex(0)}
-                >
-                    <Text style={styles.resetButtonText}>Start Over</Text>
-                </TouchableOpacity>
+                <Button onPress={() => setCurrentIndex(0)} style={styles.resetButton}>
+                    Start Over
+                </Button>
             </View>
         );
     }
@@ -98,7 +103,12 @@ const SwipeProfiles = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {/* Profile Card */}
+            {/* Next card preview */}
+            {currentIndex + 1 < profiles.length && (
+                <View style={[styles.card, styles.nextCard]} />
+            )}
+
+            {/* Current card */}
             <View style={styles.card}>
                 <Image
                     source={
@@ -109,51 +119,77 @@ const SwipeProfiles = ({ navigation }) => {
                     style={styles.image}
                 />
 
+                {/* Profile info */}
                 <View style={styles.infoContainer}>
-                    <Text style={styles.name}>
-                        {profile.first_name} {profile.last_name}
-                        {profile.date_of_birth && `, ${getAge(profile.date_of_birth)}`}
-                    </Text>
-
-                    {profile.city && (
-                        <Text style={styles.location}>
-                            📍 {profile.city}{profile.state && `, ${profile.state}`}
+                    <View style={styles.nameRow}>
+                        <Text style={styles.name}>
+                            {profile.first_name} {profile.last_name}
                         </Text>
-                    )}
+                        {profile.date_of_birth && (
+                            <Text style={styles.age}>{getAge(profile.date_of_birth)}</Text>
+                        )}
+                    </View>
 
-                    <View style={styles.detailsContainer}>
+                    <View style={styles.detailsGrid}>
+                        {profile.city && (
+                            <View style={styles.detailItem}>
+                                <Ionicons name="location" size={16} color="#6b7280" />
+                                <Text style={styles.detailText}>
+                                    {profile.city}{profile.state && `, ${profile.state}`}
+                                </Text>
+                            </View>
+                        )}
                         {profile.profession && (
-                            <Text style={styles.detail}>💼 {profile.profession}</Text>
+                            <View style={styles.detailItem}>
+                                <Ionicons name="briefcase" size={16} color="#6b7280" />
+                                <Text style={styles.detailText}>{profile.profession}</Text>
+                            </View>
                         )}
                         {profile.highest_qualification && (
-                            <Text style={styles.detail}>
-                                🎓 {profile.highest_qualification.replace('-', ' ')}
-                            </Text>
+                            <View style={styles.detailItem}>
+                                <Ionicons name="school" size={16} color="#6b7280" />
+                                <Text style={styles.detailText}>
+                                    {profile.highest_qualification.replace(/-/g, ' ')}
+                                </Text>
+                            </View>
                         )}
                         {profile.height && (
-                            <Text style={styles.detail}>📏 {profile.height}</Text>
-                        )}
-                        {profile.religion && (
-                            <Text style={styles.detail}>🕉️ {profile.religion}</Text>
+                            <View style={styles.detailItem}>
+                                <Ionicons name="resize" size={16} color="#6b7280" />
+                                <Text style={styles.detailText}>{profile.height}</Text>
+                            </View>
                         )}
                     </View>
                 </View>
             </View>
 
-            {/* Action Buttons */}
+            {/* Action buttons */}
             <View style={styles.actionsContainer}>
-                <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-                    <Text style={styles.skipButtonText}>✕</Text>
+                <TouchableOpacity
+                    style={styles.skipButton}
+                    onPress={handleSkip}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="close" size={32} color="#ef4444" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.likeButton} onPress={handleLike}>
-                    <Text style={styles.likeButtonText}>♥</Text>
+                <TouchableOpacity
+                    style={[styles.likeButton, liking && styles.likeButtonDisabled]}
+                    onPress={handleLike}
+                    disabled={liking}
+                    activeOpacity={0.7}
+                >
+                    {liking ? (
+                        <ActivityIndicator color="white" />
+                    ) : (
+                        <Ionicons name="heart" size={32} color="white" />
+                    )}
                 </TouchableOpacity>
             </View>
 
-            {/* Progress */}
+            {/* Progress indicator */}
             <Text style={styles.progress}>
-                {currentIndex + 1} of {profiles.length}
+                {currentIndex + 1} / {profiles.length}
             </Text>
         </View>
     );
@@ -163,107 +199,112 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fef2f2',
-        padding: 16,
+        alignItems: 'center',
         justifyContent: 'center',
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#fef2f2',
     },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 32,
+        backgroundColor: '#fef2f2',
     },
     emptyTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
+        marginTop: 24,
         marginBottom: 12,
-        color: '#ec4899',
+        color: '#1f2937',
     },
     emptyText: {
         fontSize: 16,
         color: '#6b7280',
-        marginBottom: 24,
+        marginBottom: 32,
         textAlign: 'center',
     },
     resetButton: {
-        backgroundColor: '#ec4899',
-        paddingHorizontal: 32,
-        paddingVertical: 12,
-        borderRadius: 24,
-    },
-    resetButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 16,
+        minWidth: 160,
     },
     card: {
+        width: CARD_WIDTH,
+        height: SCREEN_HEIGHT * 0.7,
         backgroundColor: 'white',
-        borderRadius: 16,
+        borderRadius: 24,
         overflow: 'hidden',
-        elevation: 8,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        height: height * 0.65,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
+        elevation: 10,
+    },
+    nextCard: {
+        position: 'absolute',
+        backgroundColor: '#f3f4f6',
+        transform: [{ scale: 0.95 }],
     },
     image: {
         width: '100%',
-        height: '60%',
+        height: '65%',
         backgroundColor: '#f3f4f6',
     },
     infoContainer: {
-        padding: 20,
+        padding: 24,
+        flex: 1,
+    },
+    nameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
     },
     name: {
         fontSize: 28,
         fontWeight: 'bold',
         color: '#1f2937',
-        marginBottom: 8,
+        marginRight: 8,
     },
-    location: {
-        fontSize: 16,
+    age: {
+        fontSize: 28,
+        fontWeight: '400',
         color: '#6b7280',
-        marginBottom: 16,
     },
-    detailsContainer: {
+    detailsGrid: {
+        gap: 12,
+    },
+    detailItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: 8,
     },
-    detail: {
-        fontSize: 14,
+    detailText: {
+        fontSize: 15,
         color: '#4b5563',
-        marginBottom: 4,
     },
     actionsContainer: {
         flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 32,
-        gap: 32,
+        position: 'absolute',
+        bottom: 100,
+        gap: 24,
     },
     skipButton: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
+        width: 70,
+        height: 70,
+        borderRadius: 35,
         backgroundColor: 'white',
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        borderWidth: 2,
+        borderWidth: 3,
         borderColor: '#ef4444',
-    },
-    skipButtonText: {
-        fontSize: 32,
-        color: '#ef4444',
-        fontWeight: 'bold',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
     },
     likeButton: {
         width: 80,
@@ -272,21 +313,21 @@ const styles = StyleSheet.create({
         backgroundColor: '#ec4899',
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 8,
         shadowColor: '#ec4899',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.4,
-        shadowRadius: 8,
+        shadowRadius: 12,
+        elevation: 8,
     },
-    likeButtonText: {
-        fontSize: 40,
-        color: 'white',
+    likeButtonDisabled: {
+        opacity: 0.6,
     },
     progress: {
-        textAlign: 'center',
-        marginTop: 16,
+        position: 'absolute',
+        bottom: 60,
+        fontSize: 16,
+        fontWeight: '600',
         color: '#6b7280',
-        fontSize: 14,
     },
 });
 

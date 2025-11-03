@@ -6,17 +6,21 @@ import {
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
-    Image
+    RefreshControl,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../config/api';
+import Avatar from './ui/Avatar';
+import Button from './ui/Button';
 
 const Messages = ({ navigation }) => {
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         fetchConversations();
-        const interval = setInterval(fetchConversations, 5000); // Refresh every 5s
+        const interval = setInterval(fetchConversations, 5000);
         return () => clearInterval(interval);
     }, []);
 
@@ -28,7 +32,13 @@ const Messages = ({ navigation }) => {
             console.error('Error fetching conversations:', error);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
+    };
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchConversations();
     };
 
     const formatTime = (timestamp) => {
@@ -48,38 +58,41 @@ const Messages = ({ navigation }) => {
         }
     };
 
-    const renderConversation = ({ item }) => (
+    const renderConversation = ({ item, index }) => (
         <TouchableOpacity
-            style={styles.conversationCard}
+            style={[
+                styles.conversationCard,
+                index === 0 && styles.firstCard,
+            ]}
             onPress={() => navigation.navigate('Chat', {
                 conversationId: item.id,
                 otherUserId: item.other_user_id,
                 otherUserName: `${item.other_first_name} ${item.other_last_name}`
             })}
+            activeOpacity={0.7}
         >
-            <Image
-                source={
-                    item.other_photo
-                        ? { uri: item.other_photo }
-                        : require('../assets/icon.png')
-                }
-                style={styles.avatar}
+            <Avatar
+                uri={item.other_photo}
+                size="md"
+                name={`${item.other_first_name} ${item.other_last_name}`}
             />
 
-            <View style={styles.conversationInfo}>
+            <View style={styles.conversationContent}>
                 <View style={styles.conversationHeader}>
-                    <Text style={styles.name}>
+                    <Text style={styles.name} numberOfLines={1}>
                         {item.other_first_name} {item.other_last_name}
                     </Text>
                     <Text style={styles.time}>{formatTime(item.last_message_at)}</Text>
                 </View>
 
                 {item.last_message && (
-                    <Text style={styles.lastMessage} numberOfLines={1}>
+                    <Text style={styles.lastMessage} numberOfLines={2}>
                         {item.last_message}
                     </Text>
                 )}
             </View>
+
+            <Ionicons name="chevron-forward" size={20} color="#d1d5db" />
         </TouchableOpacity>
     );
 
@@ -94,25 +107,40 @@ const Messages = ({ navigation }) => {
     if (conversations.length === 0) {
         return (
             <View style={styles.emptyContainer}>
+                <View style={styles.emptyIconContainer}>
+                    <Ionicons name="chatbubbles-outline" size={80} color="#ec4899" />
+                </View>
                 <Text style={styles.emptyTitle}>No Messages Yet</Text>
-                <Text style={styles.emptyText}>Start swiping to find matches!</Text>
-                <TouchableOpacity
-                    style={styles.browseButton}
+                <Text style={styles.emptyText}>
+                    Start swiping to find your perfect match!
+                </Text>
+                <Button
                     onPress={() => navigation.navigate('Swipe')}
+                    style={styles.browseButton}
                 >
+                    <Ionicons name="heart" size={20} color="white" style={styles.buttonIcon} />
                     <Text style={styles.browseButtonText}>Browse Profiles</Text>
-                </TouchableOpacity>
+                </Button>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Messages</Text>
             <FlatList
                 data={conversations}
                 renderItem={renderConversation}
                 keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.listContent}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#ec4899"
+                        colors={['#ec4899']}
+                    />
+                }
+                showsVerticalScrollIndicator={false}
             />
         </View>
     );
@@ -127,83 +155,102 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#fef2f2',
     },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 32,
+        backgroundColor: '#fef2f2',
+    },
+    emptyIconContainer: {
+        width: 140,
+        height: 140,
+        borderRadius: 70,
+        backgroundColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 5,
     },
     emptyTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
         marginBottom: 12,
-        color: '#ec4899',
+        color: '#1f2937',
     },
     emptyText: {
         fontSize: 16,
         color: '#6b7280',
-        marginBottom: 24,
+        marginBottom: 32,
+        textAlign: 'center',
+        lineHeight: 24,
     },
     browseButton: {
-        backgroundColor: '#ec4899',
-        paddingHorizontal: 32,
-        paddingVertical: 12,
-        borderRadius: 24,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 28,
+    },
+    buttonIcon: {
+        marginRight: 8,
     },
     browseButtonText: {
         color: 'white',
-        fontWeight: 'bold',
         fontSize: 16,
+        fontWeight: '600',
     },
-    header: {
-        fontSize: 32,
-        fontWeight: 'bold',
+    listContent: {
         padding: 16,
-        color: '#ec4899',
+        paddingTop: 8,
     },
     conversationCard: {
         flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: 'white',
         padding: 16,
-        marginHorizontal: 16,
-        marginBottom: 8,
-        borderRadius: 12,
-        elevation: 2,
+        marginBottom: 12,
+        borderRadius: 16,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
     },
-    avatar: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: '#f3f4f6',
+    firstCard: {
+        marginTop: 8,
     },
-    conversationInfo: {
+    conversationContent: {
         flex: 1,
         marginLeft: 12,
-        justifyContent: 'center',
+        marginRight: 8,
     },
     conversationHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 6,
     },
     name: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 17,
+        fontWeight: '600',
         color: '#1f2937',
+        flex: 1,
+        marginRight: 8,
     },
     time: {
-        fontSize: 12,
+        fontSize: 13,
         color: '#9ca3af',
+        fontWeight: '500',
     },
     lastMessage: {
-        fontSize: 14,
+        fontSize: 15,
         color: '#6b7280',
+        lineHeight: 20,
     },
 });
 

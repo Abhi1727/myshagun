@@ -66,10 +66,10 @@ router.post('/', [
         await db.query(
             `INSERT INTO profiles (
                 id, first_name, last_name, email, date_of_birth, mobile_number,
-                interested_for, religion, city, state, lives_with_family,
+                interested_for, interested_in, religion, city, state, lives_with_family,
                 marital_status, height, diet, smoking, drinking,
                 highest_qualification, profession
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 userId,
                 firstName,
@@ -78,6 +78,7 @@ router.post('/', [
                 dateOfBirth || null,
                 mobileNumber || null,
                 interestedFor || null,
+                interestedIn || null,
                 religion || null,
                 city || null,
                 state || null,
