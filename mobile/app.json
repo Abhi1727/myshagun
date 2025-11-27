@@ -14,6 +14,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.myshagun.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload profile pictures.",
+        "NSCameraUsageDescription": "This app needs access to your camera to take profile pictures.",
+        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
+      },
       "config": {
         "usesNonExemptEncryption": false
       }

@@ -7,6 +7,7 @@ import Home from './components/Home';
 import Login from './components/Login';
 import Register from './components/Register';
 import Chat from './components/Chat';
+import EditProfile from './components/EditProfile';
 
 const Stack = createStackNavigator();
 
@@ -44,6 +45,11 @@ const App = () => {
                 <Stack.Screen
                     name="Chat"
                     component={Chat}
+                />
+                <Stack.Screen
+                    name="EditProfile"
+                    component={EditProfile}
+                    options={{ title: 'Edit Profile' }}
                 />
             </Stack.Navigator>
         </NavigationContainer>

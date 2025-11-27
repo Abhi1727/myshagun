@@ -2,9 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // API Configuration
-// For testing on real devices with Expo Go, use production URL
-// For production builds, also use production URL
-const API_BASE_URL = 'https://api.myshagun.us/api';
+// Always use production URL for Expo Go on physical devices
+const API_BASE_URL = 'https://myshagun.us/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

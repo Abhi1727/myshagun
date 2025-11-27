@@ -11,6 +11,9 @@ app.use(cors());
 // Init Middleware
 app.use(express.json({ extended: false }));
 
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 const port = process.env.PORT || 5001;
 
 app.get('/', (req, res) => {
