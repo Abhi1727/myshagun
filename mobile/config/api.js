@@ -7,10 +7,28 @@ const API_BASE_URL = 'https://myshagun.us/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 60000, // 60 second timeout for slow tunnel connections
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Add retry logic for failed requests
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+    
+    // Retry once on timeout
+    if (error.code === 'ECONNABORTED' && !config._retry) {
+      config._retry = true;
+      console.log('Retrying request due to timeout...');
+      return api(config);
+    }
+    
+    return Promise.reject(error);
+  }
+);
 
 // Add token to requests
 api.interceptors.request.use(

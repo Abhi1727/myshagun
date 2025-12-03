@@ -1,108 +1,129 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     View,
     Text,
     StyleSheet,
-    ScrollView,
     Dimensions,
     StatusBar,
+    Image,
+    TouchableOpacity,
+    Animated,
+    ImageBackground,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Button from './ui/Button';
 
 const { width, height } = Dimensions.get('window');
 
 const LandingScreen = ({ navigation }) => {
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(50)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 1000,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 800,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
+
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" />
-
-            <LinearGradient
-                colors={['#ec4899', '#db2777', '#be185d']}
-                style={styles.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            
+            {/* Background with gradient overlay */}
+            <ImageBackground
+                source={require('../assets/hero-couple.jpg')}
+                style={styles.backgroundImage}
+                resizeMode="cover"
             >
-                <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
+                <LinearGradient
+                    colors={['rgba(0,0,0,0.3)', 'rgba(236,72,153,0.85)', 'rgba(190,24,93,0.95)']}
+                    style={styles.gradient}
+                    locations={[0, 0.5, 1]}
                 >
-                    {/* Hero Section */}
-                    <View style={styles.heroSection}>
-                        <View style={styles.logoContainer}>
-                            <Ionicons name="heart" size={80} color="white" />
-                        </View>
+                    {/* Top Section - Logo & Branding */}
+                    <Animated.View 
+                        style={[
+                            styles.topSection,
+                            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+                        ]}
+                    >
+                        <Image
+                            source={require('../assets/logo.png')}
+                            style={styles.logo}
+                            resizeMode="contain"
+                        />
+                        <Text style={styles.brandName}>MyShagun</Text>
+                        <Text style={styles.tagline}>Find Your Soulmate</Text>
+                    </Animated.View>
 
-                        <Text style={styles.title}>MyShagun</Text>
-                        <Text style={styles.tagline}>
-                            Find Your Perfect Match
+                    {/* Middle Section - Hero Text */}
+                    <View style={styles.middleSection}>
+                        <Text style={styles.heroTitle}>Where Destiny{'\n'}Meets Technology</Text>
+                        <Text style={styles.heroSubtitle}>
+                            Join millions finding meaningful connections and beautiful beginnings
                         </Text>
-                        <Text style={styles.description}>
-                            Connect with people who share your values, culture, and dreams
-                        </Text>
-                    </View>
-
-                    {/* Features Section */}
-                    <View style={styles.featuresSection}>
-                        <View style={styles.featureCard}>
-                            <View style={styles.featureIconContainer}>
-                                <Ionicons name="shield-checkmark" size={32} color="#ec4899" />
+                        
+                        {/* Trust Badges */}
+                        <View style={styles.trustBadges}>
+                            <View style={styles.badge}>
+                                <Ionicons name="shield-checkmark" size={16} color="#fbbf24" />
+                                <Text style={styles.badgeText}>Verified Profiles</Text>
                             </View>
-                            <Text style={styles.featureTitle}>Safe & Secure</Text>
-                            <Text style={styles.featureDescription}>
-                                Verified profiles with advanced security
-                            </Text>
-                        </View>
-
-                        <View style={styles.featureCard}>
-                            <View style={styles.featureIconContainer}>
-                                <Ionicons name="people" size={32} color="#ec4899" />
+                            <View style={styles.badge}>
+                                <Ionicons name="heart" size={16} color="#fbbf24" />
+                                <Text style={styles.badgeText}>6M+ Matches</Text>
                             </View>
-                            <Text style={styles.featureTitle}>Quality Matches</Text>
-                            <Text style={styles.featureDescription}>
-                                Smart algorithm for perfect compatibility
-                            </Text>
-                        </View>
-
-                        <View style={styles.featureCard}>
-                            <View style={styles.featureIconContainer}>
-                                <Ionicons name="chatbubbles" size={32} color="#ec4899" />
-                            </View>
-                            <Text style={styles.featureTitle}>Easy Communication</Text>
-                            <Text style={styles.featureDescription}>
-                                Connect instantly with your matches
-                            </Text>
                         </View>
                     </View>
 
-                    {/* CTA Buttons */}
-                    <View style={styles.ctaSection}>
-                        <Button
+                    {/* Bottom Section - CTA Buttons */}
+                    <View style={styles.bottomSection}>
+                        <TouchableOpacity
+                            style={styles.primaryButton}
                             onPress={() => navigation.navigate('Register')}
-                            variant="primary"
-                            size="lg"
-                            style={styles.signupButton}
+                            activeOpacity={0.9}
                         >
-                            Create Account
-                        </Button>
+                            <LinearGradient
+                                colors={['#ffffff', '#f9fafb']}
+                                style={styles.buttonGradient}
+                            >
+                                <Text style={styles.primaryButtonText}>Create Free Account</Text>
+                                <Ionicons name="arrow-forward" size={20} color="#ec4899" />
+                            </LinearGradient>
+                        </TouchableOpacity>
 
-                        <Button
+                        <TouchableOpacity
+                            style={styles.secondaryButton}
                             onPress={() => navigation.navigate('Login')}
-                            variant="outline"
-                            size="lg"
-                            style={styles.loginButton}
-                            textStyle={styles.loginButtonText}
+                            activeOpacity={0.8}
                         >
-                            Sign In
-                        </Button>
+                            <Text style={styles.secondaryButtonText}>Already have an account? </Text>
+                            <Text style={styles.signInText}>Sign In</Text>
+                        </TouchableOpacity>
 
-                        <Text style={styles.footerText}>
-                            Join thousands of happy couples
-                        </Text>
+                        {/* Footer */}
+                        <View style={styles.footer}>
+                            <View style={styles.ratingContainer}>
+                                <Ionicons name="star" size={14} color="#fbbf24" />
+                                <Ionicons name="star" size={14} color="#fbbf24" />
+                                <Ionicons name="star" size={14} color="#fbbf24" />
+                                <Ionicons name="star" size={14} color="#fbbf24" />
+                                <Ionicons name="star" size={14} color="#fbbf24" />
+                            </View>
+                            <Text style={styles.footerText}>America's Most Trusted Matrimony Platform</Text>
+                        </View>
                     </View>
-                </ScrollView>
-            </LinearGradient>
+                </LinearGradient>
+            </ImageBackground>
         </View>
     );
 };
@@ -111,120 +132,137 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    },
     gradient: {
         flex: 1,
+        paddingTop: StatusBar.currentHeight || 50,
     },
-    scrollContent: {
-        flexGrow: 1,
-        paddingBottom: 40,
-    },
-    heroSection: {
+    topSection: {
         alignItems: 'center',
-        paddingTop: height * 0.1,
-        paddingHorizontal: 24,
-        marginBottom: 40,
+        paddingTop: 20,
     },
-    logoContainer: {
-        width: 140,
-        height: 140,
-        borderRadius: 70,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 24,
-        borderWidth: 3,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+    logo: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 12,
     },
-    title: {
-        fontSize: 48,
+    brandName: {
+        fontSize: 32,
         fontWeight: 'bold',
         color: 'white',
-        marginBottom: 12,
-        textShadowColor: 'rgba(0, 0, 0, 0.3)',
+        textShadowColor: 'rgba(0,0,0,0.3)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
+    },
+    tagline: {
+        fontSize: 16,
+        color: 'rgba(255,255,255,0.9)',
+        marginTop: 4,
+        fontWeight: '500',
+    },
+    middleSection: {
+        flex: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 24,
+    },
+    heroTitle: {
+        fontSize: 36,
+        fontWeight: 'bold',
+        color: 'white',
+        textAlign: 'center',
+        lineHeight: 44,
+        marginBottom: 16,
+        textShadowColor: 'rgba(0,0,0,0.3)',
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 8,
     },
-    tagline: {
-        fontSize: 24,
-        color: 'white',
-        marginBottom: 16,
-        fontWeight: '600',
-        textAlign: 'center',
-    },
-    description: {
+    heroSubtitle: {
         fontSize: 16,
-        color: 'rgba(255, 255, 255, 0.9)',
+        color: 'rgba(255,255,255,0.9)',
         textAlign: 'center',
         lineHeight: 24,
         paddingHorizontal: 20,
     },
-    featuresSection: {
-        paddingHorizontal: 24,
-        marginBottom: 40,
-    },
-    featureCard: {
-        backgroundColor: 'white',
-        borderRadius: 20,
-        padding: 24,
-        marginBottom: 16,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-    featureIconContainer: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: '#fef2f2',
+    trustBadges: {
+        flexDirection: 'row',
         justifyContent: 'center',
+        marginTop: 24,
+        gap: 16,
+    },
+    badge: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        gap: 6,
     },
-    featureTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#1f2937',
-        marginBottom: 8,
-    },
-    featureDescription: {
-        fontSize: 15,
-        color: '#6b7280',
-        textAlign: 'center',
-        lineHeight: 22,
-    },
-    ctaSection: {
-        paddingHorizontal: 24,
-        alignItems: 'center',
-    },
-    signupButton: {
-        width: '100%',
-        marginBottom: 16,
-        backgroundColor: 'white',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-    loginButton: {
-        width: '100%',
-        backgroundColor: 'transparent',
-        borderColor: 'white',
-        borderWidth: 2,
-        marginBottom: 24,
-    },
-    loginButtonText: {
+    badgeText: {
+        fontSize: 12,
         color: 'white',
-        fontSize: 16,
         fontWeight: '600',
     },
+    bottomSection: {
+        paddingHorizontal: 24,
+        paddingBottom: 40,
+    },
+    primaryButton: {
+        borderRadius: 16,
+        overflow: 'hidden',
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+    buttonGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 18,
+        paddingHorizontal: 32,
+        gap: 8,
+    },
+    primaryButtonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#ec4899',
+    },
+    secondaryButton: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 16,
+    },
+    secondaryButtonText: {
+        fontSize: 15,
+        color: 'rgba(255,255,255,0.8)',
+    },
+    signInText: {
+        fontSize: 15,
+        color: 'white',
+        fontWeight: 'bold',
+        textDecorationLine: 'underline',
+    },
+    footer: {
+        alignItems: 'center',
+        marginTop: 16,
+    },
+    ratingContainer: {
+        flexDirection: 'row',
+        gap: 2,
+        marginBottom: 8,
+    },
     footerText: {
-        fontSize: 14,
-        color: 'rgba(255, 255, 255, 0.8)',
-        textAlign: 'center',
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.7)',
         fontWeight: '500',
     },
 });

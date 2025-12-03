@@ -12,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import api from "@/lib/api";
 import RegistrationForm from "@/components/RegistrationForm";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart, Sparkles } from "lucide-react";
+import heroImage from "@/assets/hero-couple.jpg";
 
 type AuthMode = 'login' | 'otp' | 'forgot-password' | 'reset-password';
 
@@ -25,6 +26,7 @@ const Auth = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [showRegistration, setShowRegistration] = useState(false);
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
@@ -76,7 +78,7 @@ const Auth = () => {
 
     try {
       await api.post('/auth/send-otp', { email });
-      setAuthMode('otp');
+      setOtpSent(true);
       toast({
         title: "OTP Sent!",
         description: "Check your email for the 6-digit code.",
@@ -259,8 +261,8 @@ const Auth = () => {
 
       case 'otp':
         return (
-          <form onSubmit={otp ? handleVerifyOtp : handleSendOtp} className="space-y-4">
-            {!otp ? (
+          <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-4">
+            {!otpSent ? (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="email-otp">Email Address</Label>
@@ -297,6 +299,17 @@ const Auth = () => {
                 <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
                   {loading ? "Verifying..." : "Verify & Sign In"}
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtp("");
+                  }}
+                >
+                  Resend OTP
+                </Button>
               </>
             )}
             <Button
@@ -306,6 +319,7 @@ const Auth = () => {
               onClick={() => {
                 setAuthMode('login');
                 setOtp("");
+                setOtpSent(false);
               }}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -444,9 +458,100 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-warm overflow-hidden relative">
+      {/* Romantic Background with Hero Image */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center z-0"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      >
+        <div className="absolute inset-0 bg-black/40"></div>
+      </div>
+
+      {/* Romantic Background Overlay */}
+      <div className="fixed inset-0 bg-romantic-gradient pointer-events-none z-0"></div>
+      <div className="fixed inset-0 bg-heart-pattern pointer-events-none z-0"></div>
+
+      {/* Floating Hearts Animation */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
+        {[...Array(12)].map((_, i) => (
+          <Heart
+            key={`heart-${i}`}
+            className="absolute text-pink-400/30 animate-float-up"
+            style={{
+              left: `${Math.random() * 100}%`,
+              width: `${15 + Math.random() * 25}px`,
+              height: `${15 + Math.random() * 25}px`,
+              animationDelay: `${i * 1.5}s`,
+              animationDuration: `${12 + Math.random() * 8}s`,
+            }}
+            fill="currentColor"
+          />
+        ))}
+      </div>
+
+      {/* Twinkling Hearts */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
+        {[...Array(15)].map((_, i) => (
+          <Heart
+            key={`twinkle-${i}`}
+            className="absolute text-pink-300/25 animate-twinkle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${8 + Math.random() * 15}px`,
+              height: `${8 + Math.random() * 15}px`,
+              animationDelay: `${i * 0.3}s`,
+            }}
+            fill="currentColor"
+          />
+        ))}
+      </div>
+
+      {/* Sparkles */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
+        {[...Array(10)].map((_, i) => (
+          <Sparkles
+            key={`sparkle-${i}`}
+            className="absolute text-amber-300/40 animate-twinkle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${12 + Math.random() * 18}px`,
+              height: `${12 + Math.random() * 18}px`,
+              animationDelay: `${i * 0.5}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Rose Petals Falling */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={`petal-${i}`}
+            className="absolute animate-petal-fall"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${i * 2}s`,
+              animationDuration: `${10 + Math.random() * 6}s`,
+            }}
+          >
+            <div
+              className="w-3 h-3 rounded-full bg-gradient-to-br from-pink-300/40 to-rose-400/40 blur-sm"
+            ></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Glowing Orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-20 left-10 w-48 h-48 bg-pink-300/20 rounded-full blur-3xl animate-pulse-glow"></div>
+        <div className="absolute top-40 right-20 w-64 h-64 bg-rose-200/20 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-20 left-1/4 w-56 h-56 bg-pink-200/15 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
+      </div>
+
       {/* Header Navigation */}
-      <nav className="relative z-10 bg-white border-b border-border/50 shadow-sm">
+      <nav className="relative z-20 bg-white/95 backdrop-blur-sm border-b border-border/50 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -496,9 +601,9 @@ const Auth = () => {
       </nav>
 
       {/* Main Content */}
-      <div className="flex items-center justify-center p-4 py-12">
+      <div className="relative z-20 flex items-center justify-center p-4 py-12">
         <div className="w-full max-w-md mx-auto">
-          <Card className="w-full shadow-xl border-2 border-border/50">
+          <Card className="w-full shadow-2xl border-2 border-[#8B4513]/20 bg-white/95 backdrop-blur-sm">
             <Tabs defaultValue="signin" value="signin">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin" className="font-['Poppins'] font-semibold">Sign In</TabsTrigger>
@@ -522,13 +627,13 @@ const Auth = () => {
 
           {/* Footer Note */}
           <div className="text-center mt-6">
-            <p className="text-sm text-muted-foreground font-['Poppins']">
+            <p className="text-sm text-white/90 font-['Poppins'] drop-shadow-md">
               By continuing, you agree to our{" "}
-              <button onClick={() => navigate("/terms-of-service")} className="text-[#8B4513] hover:underline font-medium">
+              <button onClick={() => navigate("/terms-of-service")} className="text-white hover:underline font-medium">
                 Terms of Service
               </button>{" "}
               and{" "}
-              <button onClick={() => navigate("/privacy-policy")} className="text-[#8B4513] hover:underline font-medium">
+              <button onClick={() => navigate("/privacy-policy")} className="text-white hover:underline font-medium">
                 Privacy Policy
               </button>
             </p>

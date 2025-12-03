@@ -273,12 +273,124 @@ const Dashboard = () => {
                         </div>
                         <div>
                           <Label htmlFor="height">Height</Label>
-                          <Input
-                            id="height"
-                            value={editForm.height || ''}
-                            onChange={(e) => setEditForm({...editForm, height: e.target.value})}
-                            placeholder="e.g., 5'10&quot;"
-                          />
+                          <Select value={editForm.height || ''} onValueChange={(v) => setEditForm({...editForm, height: v})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select height" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="4'6&quot;">4'6"</SelectItem>
+                              <SelectItem value="4'7&quot;">4'7"</SelectItem>
+                              <SelectItem value="4'8&quot;">4'8"</SelectItem>
+                              <SelectItem value="4'9&quot;">4'9"</SelectItem>
+                              <SelectItem value="4'10&quot;">4'10"</SelectItem>
+                              <SelectItem value="4'11&quot;">4'11"</SelectItem>
+                              <SelectItem value="5'0&quot;">5'0"</SelectItem>
+                              <SelectItem value="5'1&quot;">5'1"</SelectItem>
+                              <SelectItem value="5'2&quot;">5'2"</SelectItem>
+                              <SelectItem value="5'3&quot;">5'3"</SelectItem>
+                              <SelectItem value="5'4&quot;">5'4"</SelectItem>
+                              <SelectItem value="5'5&quot;">5'5"</SelectItem>
+                              <SelectItem value="5'6&quot;">5'6"</SelectItem>
+                              <SelectItem value="5'7&quot;">5'7"</SelectItem>
+                              <SelectItem value="5'8&quot;">5'8"</SelectItem>
+                              <SelectItem value="5'9&quot;">5'9"</SelectItem>
+                              <SelectItem value="5'10&quot;">5'10"</SelectItem>
+                              <SelectItem value="5'11&quot;">5'11"</SelectItem>
+                              <SelectItem value="6'0&quot;">6'0"</SelectItem>
+                              <SelectItem value="6'1&quot;">6'1"</SelectItem>
+                              <SelectItem value="6'2&quot;">6'2"</SelectItem>
+                              <SelectItem value="6'3&quot;">6'3"</SelectItem>
+                              <SelectItem value="6'4&quot;">6'4"</SelectItem>
+                              <SelectItem value="6'5&quot;">6'5"</SelectItem>
+                              <SelectItem value="6'6&quot;">6'6"+</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="religion">Religion</Label>
+                          <Select value={editForm.religion || ''} onValueChange={(v) => setEditForm({...editForm, religion: v})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select religion" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="hindu">Hindu</SelectItem>
+                              <SelectItem value="muslim">Muslim</SelectItem>
+                              <SelectItem value="christian">Christian</SelectItem>
+                              <SelectItem value="sikh">Sikh</SelectItem>
+                              <SelectItem value="buddhist">Buddhist</SelectItem>
+                              <SelectItem value="jain">Jain</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="maritalStatus">Marital Status</Label>
+                          <Select value={editForm.marital_status || ''} onValueChange={(v) => setEditForm({...editForm, marital_status: v})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="never_married">Never Married</SelectItem>
+                              <SelectItem value="divorced">Divorced</SelectItem>
+                              <SelectItem value="widowed">Widowed</SelectItem>
+                              <SelectItem value="separated">Separated</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="diet">Diet</Label>
+                          <Select value={editForm.diet || ''} onValueChange={(v) => setEditForm({...editForm, diet: v})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select diet" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                              <SelectItem value="non_vegetarian">Non-Vegetarian</SelectItem>
+                              <SelectItem value="eggetarian">Eggetarian</SelectItem>
+                              <SelectItem value="vegan">Vegan</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="smoking">Smoking</Label>
+                          <Select value={editForm.smoking || ''} onValueChange={(v) => setEditForm({...editForm, smoking: v})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="never">Never</SelectItem>
+                              <SelectItem value="occasionally">Occasionally</SelectItem>
+                              <SelectItem value="regularly">Regularly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="drinking">Drinking</Label>
+                          <Select value={editForm.drinking || ''} onValueChange={(v) => setEditForm({...editForm, drinking: v})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="never">Never</SelectItem>
+                              <SelectItem value="occasionally">Occasionally</SelectItem>
+                              <SelectItem value="regularly">Regularly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="qualification">Highest Qualification</Label>
+                          <Select value={editForm.highest_qualification || ''} onValueChange={(v) => setEditForm({...editForm, highest_qualification: v})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="high_school">High School</SelectItem>
+                              <SelectItem value="bachelors">Bachelor's Degree</SelectItem>
+                              <SelectItem value="masters">Master's Degree</SelectItem>
+                              <SelectItem value="doctorate">Doctorate</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="col-span-2">
                           <Label htmlFor="bio">Bio</Label>

@@ -74,6 +74,81 @@ router.get('/featured', async (req, res) => {
     }
 });
 
+// @route   GET api/profiles/discover
+// @desc    Get profiles for swiping (excludes current user, already liked, and connected)
+// @access  Private
+router.get('/discover', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        // Get profiles excluding:
+        // 1. Current user's own profile
+        // 2. Profiles already liked by current user
+        // 3. Profiles already connected with current user
+        const [profiles] = await db.query(`
+            SELECT p.* FROM profiles p
+            WHERE p.id != ?
+            AND p.id NOT IN (
+                SELECT liked_user_id FROM likes WHERE user_id = ?
+            )
+            AND p.id NOT IN (
+                SELECT user1_id FROM conversations WHERE user2_id = ?
+                UNION
+                SELECT user2_id FROM conversations WHERE user1_id = ?
+            )
+            ORDER BY RAND()
+        `, [userId, userId, userId, userId]);
+        
+        res.json(profiles);
+    } catch (err) {
+        console.error('Get discover profiles error:', err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// @route   GET api/profiles/browse
+// @desc    Get all profiles for browsing (excludes current user)
+// @access  Private
+router.get('/browse', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const [profiles] = await db.query(
+            'SELECT * FROM profiles WHERE id != ? ORDER BY created_at DESC',
+            [userId]
+        );
+        res.json(profiles);
+    } catch (err) {
+        console.error('Get browse profiles error:', err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// @route   GET api/profiles/likes-received
+// @desc    Get profiles who liked current user
+// @access  Private
+router.get('/likes-received', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        // Get profiles who liked current user (but current user hasn't liked back yet)
+        const [likes] = await db.query(`
+            SELECT p.*, l.created_at as liked_at
+            FROM likes l
+            JOIN profiles p ON l.user_id = p.id
+            WHERE l.liked_user_id = ?
+            AND l.user_id NOT IN (
+                SELECT liked_user_id FROM likes WHERE user_id = ?
+            )
+            ORDER BY l.created_at DESC
+        `, [userId, userId]);
+        
+        res.json(likes);
+    } catch (err) {
+        console.error('Get likes received error:', err.message);
+        res.status(500).send('Server error');
+    }
+});
+
 // @route   GET api/profiles/me
 // @desc    Get current user's profile
 // @access  Private
@@ -92,9 +167,65 @@ router.get('/me', auth, async (req, res) => {
     }
 });
 
+// @route   GET api/profiles/likes/received
+// @desc    Get profiles who liked current user
+// @access  Private
+router.get('/likes/received', auth, async (req, res) => {
+    try {
+        const [likes] = await db.query(
+            `SELECT p.*, pl.created_at as liked_at
+             FROM profile_likes pl
+             JOIN profiles p ON pl.from_profile_id = p.id
+             WHERE pl.to_profile_id = ?
+             ORDER BY pl.created_at DESC`,
+            [req.user.id]
+        );
+
+        res.json(likes);
+    } catch (err) {
+        console.error('Get likes error:', err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// @route   GET api/profiles/connections
+// @desc    Get all connections of current user
+// @access  Private
+router.get('/connections', auth, async (req, res) => {
+    try {
+        // Get connections where user is profile_id_1
+        const [connections1] = await db.query(
+            `SELECT p.*, pc.status, pc.created_at as connected_at
+             FROM profile_connections pc
+             JOIN profiles p ON pc.profile_id_2 = p.id
+             WHERE pc.profile_id_1 = ? AND pc.status = 'accepted'`,
+            [req.user.id]
+        );
+
+        // Get connections where user is profile_id_2
+        const [connections2] = await db.query(
+            `SELECT p.*, pc.status, pc.created_at as connected_at
+             FROM profile_connections pc
+             JOIN profiles p ON pc.profile_id_1 = p.id
+             WHERE pc.profile_id_2 = ? AND pc.status = 'accepted'`,
+            [req.user.id]
+        );
+
+        // Combine and sort by connected_at
+        const allConnections = [...connections1, ...connections2].sort(
+            (a, b) => new Date(b.connected_at) - new Date(a.connected_at)
+        );
+
+        res.json(allConnections);
+    } catch (err) {
+        console.error('Get connections error:', err.message);
+        res.status(500).send('Server error');
+    }
+});
+
 // @route   GET api/profiles/:id
 // @desc    Get profile by ID
-// @access  Private
+// @access  Private (MUST be after all specific routes like /me, /connections, /likes/received)
 router.get('/:id', auth, async (req, res) => {
     try {
         const [profiles] = await db.query('SELECT * FROM profiles WHERE id = ?', [req.params.id]);
@@ -248,6 +379,8 @@ router.get('/', async (req, res) => {
 
 // @route   POST api/profiles/like/:id
 // @desc    Like a profile
+// @route   POST api/profiles/like/:id
+// @desc    Like a profile
 // @access  Private
 router.post('/like/:id', auth, async (req, res) => {
     try {
@@ -277,27 +410,6 @@ router.post('/like/:id', auth, async (req, res) => {
         res.json({ msg: 'Profile liked successfully' });
     } catch (err) {
         console.error('Like error:', err.message);
-        res.status(500).send('Server error');
-    }
-});
-
-// @route   GET api/profiles/likes/received
-// @desc    Get profiles who liked current user
-// @access  Private
-router.get('/likes/received', auth, async (req, res) => {
-    try {
-        const [likes] = await db.query(
-            `SELECT p.*, pl.created_at as liked_at
-             FROM profile_likes pl
-             JOIN profiles p ON pl.from_profile_id = p.id
-             WHERE pl.to_profile_id = ?
-             ORDER BY pl.created_at DESC`,
-            [req.user.id]
-        );
-
-        res.json(likes);
-    } catch (err) {
-        console.error('Get likes error:', err.message);
         res.status(500).send('Server error');
     }
 });
@@ -336,44 +448,6 @@ router.post('/connect/:id', auth, async (req, res) => {
         res.json({ msg: 'Connected successfully' });
     } catch (err) {
         console.error('Connect error:', err.message);
-        res.status(500).send('Server error');
-    }
-});
-
-// @route   GET api/profiles/connections
-// @desc    Get all connections of current user
-// @access  Private
-router.get('/connections', auth, async (req, res) => {
-    try {
-        const [connections] = await db.query(
-            `SELECT
-                CASE
-                    WHEN pc.profile_id_1 = ? THEN p2.*
-                    ELSE p1.*
-                END as profile,
-                pc.status,
-                pc.created_at as connected_at
-             FROM profile_connections pc
-             LEFT JOIN profiles p1 ON pc.profile_id_1 = p1.id
-             LEFT JOIN profiles p2 ON pc.profile_id_2 = p2.id
-             WHERE (pc.profile_id_1 = ? OR pc.profile_id_2 = ?) AND pc.status = 'accepted'
-             ORDER BY pc.created_at DESC`,
-            [req.user.id, req.user.id, req.user.id]
-        );
-
-        // Parse the profile JSON
-        const formattedConnections = connections.map(conn => {
-            const profile = typeof conn.profile === 'string' ? JSON.parse(conn.profile) : conn.profile;
-            return {
-                ...profile,
-                status: conn.status,
-                connected_at: conn.connected_at
-            };
-        });
-
-        res.json(formattedConnections);
-    } catch (err) {
-        console.error('Get connections error:', err.message);
         res.status(500).send('Server error');
     }
 });

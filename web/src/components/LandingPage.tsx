@@ -498,127 +498,12 @@ const LandingPage = () => {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="text-base sm:text-lg px-8 sm:px-12 py-6 sm:py-7 rounded-full font-['Poppins'] border-white/30 hover:bg-white/5 text-white font-semibold"
+                    className="text-base sm:text-lg px-8 sm:px-12 py-6 sm:py-7 rounded-full font-['Poppins'] border-2 border-white bg-white/10 hover:bg-white/20 text-white font-semibold backdrop-blur-sm"
                     onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
                   >
                     Learn More
                   </Button>
                 </div>
-              </div>
-
-
-
-              <div className="relative animate-scale-in order-first lg:order-last">
-
-                <Card className="bg-white/95 backdrop-blur-sm shadow-2xl border-2 border-[#8B4513]/20">
-                  <CardContent className="p-8">
-                    <div className="text-center mb-6">
-                      <h2 className="text-2xl font-['Playfair_Display'] font-bold text-[#8B4513] mb-2">
-                        Welcome Back
-                      </h2>
-                      <p className="text-muted-foreground font-['Poppins'] text-sm">
-                        Login to find your perfect match
-                      </p>
-                    </div>
-
-                    <form onSubmit={handleLogin} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="login-email" className="font-['Poppins']">
-                          Email / Mobile / User ID
-                        </Label>
-                        <Input
-                          id="login-email"
-                          type="text"
-                          placeholder="Enter your email, mobile or user ID"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="font-['Poppins']"
-                          required
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <Label htmlFor="login-password" className="font-['Poppins']">
-                            Password
-                          </Label>
-                          <Button
-                            type="button"
-                            variant="link"
-                            className="p-0 h-auto text-xs text-[#8B4513] font-['Poppins']"
-                            onClick={() => navigate("/auth")}
-                          >
-                            Forgot Password?
-                          </Button>
-                        </div>
-                        <Input
-                          id="login-password"
-                          type="password"
-                          placeholder="Enter your password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="font-['Poppins']"
-                          required
-                        />
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="keep-logged-in-landing"
-                          checked={keepLoggedIn}
-                          onCheckedChange={(checked) => setKeepLoggedIn(checked as boolean)}
-                        />
-                        <label
-                          htmlFor="keep-logged-in-landing"
-                          className="text-sm font-['Poppins'] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                        >
-                          Keep me logged in
-                        </label>
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={loginLoading}
-                        className="w-full bg-[#8B4513] hover:bg-[#6B3410] font-['Poppins'] font-semibold"
-                      >
-                        {loginLoading ? "Logging in..." : "Login Now"}
-                      </Button>
-
-                      <div className="relative my-4">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-white px-2 text-muted-foreground font-['Poppins']">Or</span>
-                        </div>
-                      </div>
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => navigate("/auth")}
-                        className="w-full border-green-600 text-green-600 hover:bg-green-50 font-['Poppins'] font-semibold"
-                      >
-                        Login With OTP
-                      </Button>
-
-                      <div className="text-center pt-4 border-t">
-                        <p className="text-sm text-muted-foreground font-['Poppins'] mb-3">
-                          New to MyShagun?
-                        </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setShowRegistration(true)}
-                          className="w-full border-[#8B4513]/30 text-[#8B4513] hover:bg-[#8B4513]/5 font-['Poppins'] font-semibold"
-                        >
-                          <Heart className="w-4 h-4 mr-2" />
-                          Create Free Account
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
               </div>
             </div>
           </div>
@@ -954,7 +839,7 @@ const LandingPage = () => {
             >
             <CarouselContent className="-ml-2 md:-ml-4">
               {featuredProfiles.map((profile) => (
-                <CarouselItem key={profile.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={profile.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
                   <Card className="overflow-hidden transition-all duration-500 group border-2 border-transparent hover:border-primary/50 hover:shadow-2xl hover:scale-105 transform">
                     <div className="relative">
                       <img

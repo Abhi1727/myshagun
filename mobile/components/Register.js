@@ -8,10 +8,14 @@ import {
     Alert,
     ActivityIndicator,
     TouchableOpacity,
-    Platform
+    Platform,
+    Image,
+    StatusBar,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../config/api';
 
@@ -392,9 +396,18 @@ const Register = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="#fef2f2" />
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.title}>Create Your Profile</Text>
-                <Text style={styles.subtitle}>Step {step} of 4</Text>
+                {/* Header with Logo */}
+                <View style={styles.header}>
+                    <Image
+                        source={require('../assets/logo.png')}
+                        style={styles.logo}
+                        resizeMode="contain"
+                    />
+                    <Text style={styles.title}>Create Your Profile</Text>
+                    <Text style={styles.subtitle}>Step {step} of 4</Text>
+                </View>
 
                 <View style={styles.progressBar}>
                     <View style={[styles.progressFill, { width: `${(step / 4) * 100}%` }]} />
@@ -412,6 +425,7 @@ const Register = ({ navigation }) => {
                             onPress={prevStep}
                             disabled={loading}
                         >
+                            <Ionicons name="arrow-back" size={18} color="#ec4899" />
                             <Text style={styles.secondaryButtonText}>Previous</Text>
                         </TouchableOpacity>
                     )}
@@ -423,9 +437,12 @@ const Register = ({ navigation }) => {
                         {loading ? (
                             <ActivityIndicator color="white" />
                         ) : (
-                            <Text style={styles.primaryButtonText}>
-                                {step === 4 ? 'Submit' : 'Next'}
-                            </Text>
+                            <>
+                                <Text style={styles.primaryButtonText}>
+                                    {step === 4 ? 'Create Account' : 'Next'}
+                                </Text>
+                                <Ionicons name={step === 4 ? "checkmark-circle" : "arrow-forward"} size={18} color="white" />
+                            </>
                         )}
                     </TouchableOpacity>
                 </View>
@@ -434,7 +451,8 @@ const Register = ({ navigation }) => {
                     style={styles.loginLink}
                     onPress={() => navigation.navigate('Login')}
                 >
-                    <Text style={styles.loginLinkText}>Already have an account? Login</Text>
+                    <Text style={styles.loginLinkText}>Already have an account? </Text>
+                    <Text style={styles.loginLinkBold}>Sign In</Text>
                 </TouchableOpacity>
             </ScrollView>
         </View>
@@ -450,19 +468,28 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        padding: 20,
+        padding: 24,
+    },
+    header: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    logo: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        marginBottom: 12,
     },
     title: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: 8,
-        color: '#ec4899',
+        marginBottom: 4,
+        color: '#1f2937',
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: 15,
         textAlign: 'center',
-        marginBottom: 16,
         color: '#6b7280',
     },
     progressBar: {
@@ -475,9 +502,18 @@ const styles = StyleSheet.create({
     progressFill: {
         height: '100%',
         backgroundColor: '#ec4899',
+        borderRadius: 4,
     },
     stepContainer: {
-        marginBottom: 24,
+        backgroundColor: 'white',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
     },
     stepTitle: {
         fontSize: 20,
@@ -493,28 +529,28 @@ const styles = StyleSheet.create({
         color: '#374151',
     },
     input: {
-        height: 50,
+        height: 52,
         borderColor: '#e5e7eb',
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: 12,
         paddingHorizontal: 16,
-        backgroundColor: 'white',
+        backgroundColor: '#f9fafb',
         fontSize: 16,
     },
     picker: {
-        height: 50,
+        height: 52,
         borderColor: '#e5e7eb',
         borderWidth: 1,
-        borderRadius: 8,
-        backgroundColor: 'white',
+        borderRadius: 12,
+        backgroundColor: '#f9fafb',
     },
     dateButton: {
-        height: 50,
+        height: 52,
         borderColor: '#e5e7eb',
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: 12,
         paddingHorizontal: 16,
-        backgroundColor: 'white',
+        backgroundColor: '#f9fafb',
         justifyContent: 'center',
     },
     dateButtonText: {
@@ -524,24 +560,31 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: 'row',
         gap: 12,
-        marginTop: 24,
+        marginTop: 8,
     },
     button: {
         flex: 1,
-        height: 50,
-        borderRadius: 8,
+        height: 52,
+        borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
+        flexDirection: 'row',
+        gap: 8,
     },
     fullWidthButton: {
         flex: 1,
     },
     primaryButton: {
         backgroundColor: '#ec4899',
+        shadowColor: '#ec4899',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
     },
     secondaryButton: {
         backgroundColor: 'white',
-        borderWidth: 1,
+        borderWidth: 2,
         borderColor: '#ec4899',
     },
     primaryButtonText: {
@@ -555,13 +598,20 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     loginLink: {
-        marginTop: 16,
+        marginTop: 20,
         padding: 8,
+        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
     },
     loginLinkText: {
-        color: '#6366f1',
-        fontSize: 14,
+        color: '#6b7280',
+        fontSize: 15,
+    },
+    loginLinkBold: {
+        color: '#ec4899',
+        fontSize: 15,
+        fontWeight: 'bold',
     },
 });
 

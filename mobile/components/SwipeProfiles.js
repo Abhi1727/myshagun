@@ -1,26 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
     Image,
     StyleSheet,
+    Animated,
+    PanResponder,
     Dimensions,
     ActivityIndicator,
-    Alert,
     TouchableOpacity,
+    Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import api from '../config/api';
-import Button from './ui/Button';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH * 0.9;
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
+const SWIPE_OUT_DURATION = 250;
 
 const SwipeProfiles = ({ navigation }) => {
     const [profiles, setProfiles] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [liking, setLiking] = useState(false);
+    const position = useRef(new Animated.ValueXY()).current;
 
     useEffect(() => {
         fetchProfiles();
@@ -28,13 +31,130 @@ const SwipeProfiles = ({ navigation }) => {
 
     const fetchProfiles = async () => {
         try {
-            const { data } = await api.get('/profiles/featured');
+            const { data } = await api.get('/profiles/discover');
             setProfiles(data);
+            setCurrentIndex(0);
         } catch (error) {
+            console.error('Error fetching profiles:', error);
             Alert.alert('Error', 'Failed to load profiles');
         } finally {
             setLoading(false);
         }
+    };
+
+    const rotate = position.x.interpolate({
+        inputRange: [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
+        outputRange: ['-10deg', '0deg', '10deg'],
+        extrapolate: 'clamp',
+    });
+
+    const rotateAndTranslate = {
+        transform: [
+            { rotate },
+            ...position.getTranslateTransform(),
+        ],
+    };
+
+    const likeOpacity = position.x.interpolate({
+        inputRange: [0, SCREEN_WIDTH / 4],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    });
+
+    const nopeOpacity = position.x.interpolate({
+        inputRange: [-SCREEN_WIDTH / 4, 0],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+    });
+
+    const nextCardOpacity = position.x.interpolate({
+        inputRange: [-SCREEN_WIDTH / 4, 0, SCREEN_WIDTH / 4],
+        outputRange: [1, 0.5, 1],
+        extrapolate: 'clamp',
+    });
+
+    const nextCardScale = position.x.interpolate({
+        inputRange: [-SCREEN_WIDTH / 4, 0, SCREEN_WIDTH / 4],
+        outputRange: [1, 0.9, 1],
+        extrapolate: 'clamp',
+    });
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onPanResponderMove: (_, gesture) => {
+                position.setValue({ x: gesture.dx, y: gesture.dy });
+            },
+            onPanResponderRelease: (_, gesture) => {
+                if (gesture.dx > SWIPE_THRESHOLD) {
+                    swipeRight();
+                } else if (gesture.dx < -SWIPE_THRESHOLD) {
+                    swipeLeft();
+                } else {
+                    resetPosition();
+                }
+            },
+        })
+    ).current;
+
+    const swipeRight = () => {
+        Animated.timing(position, {
+            toValue: { x: SCREEN_WIDTH + 100, y: 0 },
+            duration: SWIPE_OUT_DURATION,
+            useNativeDriver: false,
+        }).start(() => {
+            handleLike();
+        });
+    };
+
+    const swipeLeft = () => {
+        Animated.timing(position, {
+            toValue: { x: -SCREEN_WIDTH - 100, y: 0 },
+            duration: SWIPE_OUT_DURATION,
+            useNativeDriver: false,
+        }).start(() => {
+            handlePass();
+        });
+    };
+
+    const resetPosition = () => {
+        Animated.spring(position, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+        }).start();
+    };
+
+    const handleLike = async () => {
+        const likedProfile = profiles[currentIndex];
+        if (!likedProfile) return;
+
+        try {
+            const { data } = await api.post('/chat/like', { likedUserId: likedProfile.id });
+            
+            if (data.match) {
+                Alert.alert(
+                    "🎉 It's a Match!",
+                    `You and ${likedProfile.first_name} liked each other!`,
+                    [
+                        { text: 'Keep Swiping', style: 'cancel' },
+                        { text: 'Send Message', onPress: () => navigation.navigate('Messages') }
+                    ]
+                );
+            }
+        } catch (error) {
+            console.error('Like error:', error);
+        }
+
+        goToNextCard();
+    };
+
+    const handlePass = () => {
+        goToNextCard();
+    };
+
+    const goToNextCard = () => {
+        setCurrentIndex((prev) => prev + 1);
+        position.setValue({ x: 0, y: 0 });
     };
 
     const getAge = (dateOfBirth) => {
@@ -49,148 +169,144 @@ const SwipeProfiles = ({ navigation }) => {
         return age;
     };
 
-    const handleLike = async () => {
-        if (currentIndex >= profiles.length || liking) return;
-
-        const profile = profiles[currentIndex];
-        setLiking(true);
-
-        try {
-            const { data } = await api.post('/chat/like', { likedUserId: profile.id });
-
-            if (data.match) {
-                Alert.alert(
-                    "🎉 It's a Match!",
-                    `You and ${profile.first_name} liked each other!`,
-                    [{ text: 'Start Chatting', onPress: () => navigation.navigate('Messages') }]
-                );
-            }
-
-            setCurrentIndex(currentIndex + 1);
-        } catch (error) {
-            Alert.alert('Error', 'Failed to like profile');
-        } finally {
-            setLiking(false);
+    const renderCards = () => {
+        if (loading) {
+            return (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#ec4899" />
+                    <Text style={styles.loadingText}>Finding matches...</Text>
+                </View>
+            );
         }
+
+        if (currentIndex >= profiles.length) {
+            return (
+                <View style={styles.noMoreCards}>
+                    <Ionicons name="heart-outline" size={80} color="#ec4899" />
+                    <Text style={styles.noMoreText}>No more profiles</Text>
+                    <Text style={styles.noMoreSubtext}>Check back later for new matches!</Text>
+                    <TouchableOpacity style={styles.refreshButton} onPress={fetchProfiles}>
+                        <Ionicons name="refresh" size={24} color="white" />
+                        <Text style={styles.refreshButtonText}>Refresh</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+
+        return profiles
+            .map((profile, index) => {
+                if (index < currentIndex) return null;
+
+                if (index === currentIndex) {
+                    return (
+                        <Animated.View
+                            key={profile.id}
+                            style={[styles.card, rotateAndTranslate]}
+                            {...panResponder.panHandlers}
+                        >
+                            <Image
+                                source={
+                                    profile.profile_photo_url
+                                        ? { uri: profile.profile_photo_url }
+                                        : require('../assets/icon.png')
+                                }
+                                style={styles.cardImage}
+                            />
+                            <LinearGradient
+                                colors={['transparent', 'rgba(0,0,0,0.9)']}
+                                style={styles.cardGradient}
+                            >
+                                <View style={styles.cardInfo}>
+                                    <Text style={styles.cardName}>
+                                        {profile.first_name}{profile.date_of_birth && `, ${getAge(profile.date_of_birth)}`}
+                                    </Text>
+                                    {profile.city && (
+                                        <View style={styles.locationRow}>
+                                            <Ionicons name="location-outline" size={16} color="white" />
+                                            <Text style={styles.cardLocation}>{profile.city}</Text>
+                                        </View>
+                                    )}
+                                    {profile.profession && (
+                                        <Text style={styles.cardProfession}>{profile.profession}</Text>
+                                    )}
+                                </View>
+                            </LinearGradient>
+
+                            {/* LIKE stamp */}
+                            <Animated.View style={[styles.stamp, styles.likeStamp, { opacity: likeOpacity }]}>
+                                <Text style={styles.likeText}>LIKE</Text>
+                            </Animated.View>
+
+                            {/* NOPE stamp */}
+                            <Animated.View style={[styles.stamp, styles.nopeStamp, { opacity: nopeOpacity }]}>
+                                <Text style={styles.nopeText}>NOPE</Text>
+                            </Animated.View>
+                        </Animated.View>
+                    );
+                }
+
+                // Next card (behind)
+                if (index === currentIndex + 1) {
+                    return (
+                        <Animated.View
+                            key={profile.id}
+                            style={[
+                                styles.card,
+                                styles.nextCard,
+                                {
+                                    opacity: nextCardOpacity,
+                                    transform: [{ scale: nextCardScale }],
+                                },
+                            ]}
+                        >
+                            <Image
+                                source={
+                                    profile.profile_photo_url
+                                        ? { uri: profile.profile_photo_url }
+                                        : require('../assets/icon.png')
+                                }
+                                style={styles.cardImage}
+                            />
+                            <LinearGradient
+                                colors={['transparent', 'rgba(0,0,0,0.9)']}
+                                style={styles.cardGradient}
+                            >
+                                <View style={styles.cardInfo}>
+                                    <Text style={styles.cardName}>
+                                        {profile.first_name}{profile.date_of_birth && `, ${getAge(profile.date_of_birth)}`}
+                                    </Text>
+                                </View>
+                            </LinearGradient>
+                        </Animated.View>
+                    );
+                }
+
+                return null;
+            })
+            .reverse();
     };
-
-    const handleSkip = () => {
-        setCurrentIndex(currentIndex + 1);
-    };
-
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#ec4899" />
-            </View>
-        );
-    }
-
-    if (currentIndex >= profiles.length) {
-        return (
-            <View style={styles.emptyContainer}>
-                <Ionicons name="heart-dislike" size={80} color="#ec4899" />
-                <Text style={styles.emptyTitle}>No More Profiles</Text>
-                <Text style={styles.emptyText}>Check back later for new matches!</Text>
-                <Button onPress={() => setCurrentIndex(0)} style={styles.resetButton}>
-                    Start Over
-                </Button>
-            </View>
-        );
-    }
-
-    const profile = profiles[currentIndex];
 
     return (
         <View style={styles.container}>
-            {/* Next card preview */}
-            {currentIndex + 1 < profiles.length && (
-                <View style={[styles.card, styles.nextCard]} />
-            )}
+            <View style={styles.cardsContainer}>{renderCards()}</View>
 
-            {/* Current card */}
-            <View style={styles.card}>
-                <Image
-                    source={
-                        profile.profile_photo_url
-                            ? { uri: profile.profile_photo_url }
-                            : require('../assets/icon.png')
-                    }
-                    style={styles.image}
-                />
+            {!loading && currentIndex < profiles.length && (
+                <View style={styles.buttonsContainer}>
+                    <TouchableOpacity
+                        style={[styles.button, styles.passButton]}
+                        onPress={swipeLeft}
+                    >
+                        <Ionicons name="close" size={35} color="#ff6b6b" />
+                    </TouchableOpacity>
 
-                {/* Profile info */}
-                <View style={styles.infoContainer}>
-                    <View style={styles.nameRow}>
-                        <Text style={styles.name}>
-                            {profile.first_name} {profile.last_name}
-                        </Text>
-                        {profile.date_of_birth && (
-                            <Text style={styles.age}>{getAge(profile.date_of_birth)}</Text>
-                        )}
-                    </View>
-
-                    <View style={styles.detailsGrid}>
-                        {profile.city && (
-                            <View style={styles.detailItem}>
-                                <Ionicons name="location" size={16} color="#6b7280" />
-                                <Text style={styles.detailText}>
-                                    {profile.city}{profile.state && `, ${profile.state}`}
-                                </Text>
-                            </View>
-                        )}
-                        {profile.profession && (
-                            <View style={styles.detailItem}>
-                                <Ionicons name="briefcase" size={16} color="#6b7280" />
-                                <Text style={styles.detailText}>{profile.profession}</Text>
-                            </View>
-                        )}
-                        {profile.highest_qualification && (
-                            <View style={styles.detailItem}>
-                                <Ionicons name="school" size={16} color="#6b7280" />
-                                <Text style={styles.detailText}>
-                                    {profile.highest_qualification.replace(/-/g, ' ')}
-                                </Text>
-                            </View>
-                        )}
-                        {profile.height && (
-                            <View style={styles.detailItem}>
-                                <Ionicons name="resize" size={16} color="#6b7280" />
-                                <Text style={styles.detailText}>{profile.height}</Text>
-                            </View>
-                        )}
-                    </View>
+                    <TouchableOpacity
+                        style={[styles.button, styles.likeButton]}
+                        onPress={swipeRight}
+                    >
+                        <Ionicons name="heart" size={35} color="#4ade80" />
+                    </TouchableOpacity>
                 </View>
-            </View>
-
-            {/* Action buttons */}
-            <View style={styles.actionsContainer}>
-                <TouchableOpacity
-                    style={styles.skipButton}
-                    onPress={handleSkip}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="close" size={32} color="#ef4444" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.likeButton, liking && styles.likeButtonDisabled]}
-                    onPress={handleLike}
-                    disabled={liking}
-                    activeOpacity={0.7}
-                >
-                    {liking ? (
-                        <ActivityIndicator color="white" />
-                    ) : (
-                        <Ionicons name="heart" size={32} color="white" />
-                    )}
-                </TouchableOpacity>
-            </View>
-
-            {/* Progress indicator */}
-            <Text style={styles.progress}>
-                {currentIndex + 1} / {profiles.length}
-            </Text>
+            )}
         </View>
     );
 };
@@ -198,136 +314,163 @@ const SwipeProfiles = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fef2f2',
-        alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: '#f8f9fa',
     },
-    loadingContainer: {
+    cardsContainer: {
         flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fef2f2',
-    },
-    emptyContainer: {
-        flex: 1,
         justifyContent: 'center',
-        alignItems: 'center',
-        padding: 32,
-        backgroundColor: '#fef2f2',
-    },
-    emptyTitle: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginTop: 24,
-        marginBottom: 12,
-        color: '#1f2937',
-    },
-    emptyText: {
-        fontSize: 16,
-        color: '#6b7280',
-        marginBottom: 32,
-        textAlign: 'center',
-    },
-    resetButton: {
-        minWidth: 160,
+        paddingTop: 20,
     },
     card: {
-        width: CARD_WIDTH,
-        height: SCREEN_HEIGHT * 0.7,
-        backgroundColor: 'white',
-        borderRadius: 24,
+        position: 'absolute',
+        width: SCREEN_WIDTH * 0.9,
+        height: SCREEN_HEIGHT * 0.65,
+        borderRadius: 20,
         overflow: 'hidden',
+        backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.2,
-        shadowRadius: 16,
-        elevation: 10,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+        elevation: 5,
     },
     nextCard: {
-        position: 'absolute',
-        backgroundColor: '#f3f4f6',
-        transform: [{ scale: 0.95 }],
+        top: 10,
     },
-    image: {
+    cardImage: {
         width: '100%',
-        height: '65%',
-        backgroundColor: '#f3f4f6',
+        height: '100%',
+        resizeMode: 'cover',
     },
-    infoContainer: {
-        padding: 24,
-        flex: 1,
+    cardGradient: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '40%',
+        justifyContent: 'flex-end',
+        padding: 20,
     },
-    nameRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
+    cardInfo: {
+        marginBottom: 10,
     },
-    name: {
+    cardName: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#1f2937',
-        marginRight: 8,
+        color: 'white',
+        marginBottom: 8,
     },
-    age: {
-        fontSize: 28,
-        fontWeight: '400',
-        color: '#6b7280',
-    },
-    detailsGrid: {
-        gap: 12,
-    },
-    detailItem: {
+    locationRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        marginBottom: 4,
     },
-    detailText: {
-        fontSize: 15,
-        color: '#4b5563',
+    cardLocation: {
+        fontSize: 16,
+        color: 'white',
+        marginLeft: 4,
     },
-    actionsContainer: {
-        flexDirection: 'row',
+    cardProfession: {
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.8)',
+        marginTop: 4,
+    },
+    stamp: {
         position: 'absolute',
-        bottom: 100,
-        gap: 24,
+        top: 50,
+        padding: 10,
+        borderWidth: 4,
+        borderRadius: 10,
     },
-    skipButton: {
+    likeStamp: {
+        left: 20,
+        borderColor: '#4ade80',
+        transform: [{ rotate: '-20deg' }],
+    },
+    nopeStamp: {
+        right: 20,
+        borderColor: '#ff6b6b',
+        transform: [{ rotate: '20deg' }],
+    },
+    likeText: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#4ade80',
+    },
+    nopeText: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#ff6b6b',
+    },
+    buttonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingBottom: 30,
+        gap: 40,
+    },
+    button: {
         width: 70,
         height: 70,
         borderRadius: 35,
-        backgroundColor: 'white',
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 3,
-        borderColor: '#ef4444',
+        backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 5,
+        elevation: 3,
+    },
+    passButton: {
+        borderWidth: 2,
+        borderColor: '#ff6b6b',
     },
     likeButton: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: '#ec4899',
-        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: '#4ade80',
+    },
+    loadingContainer: {
         alignItems: 'center',
-        shadowColor: '#ec4899',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 12,
-        elevation: 8,
+        justifyContent: 'center',
     },
-    likeButtonDisabled: {
-        opacity: 0.6,
-    },
-    progress: {
-        position: 'absolute',
-        bottom: 60,
-        fontSize: 16,
-        fontWeight: '600',
+    loadingText: {
+        marginTop: 16,
+        fontSize: 18,
         color: '#6b7280',
+    },
+    noMoreCards: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 40,
+    },
+    noMoreText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#1f2937',
+        marginTop: 20,
+    },
+    noMoreSubtext: {
+        fontSize: 16,
+        color: '#6b7280',
+        marginTop: 8,
+        textAlign: 'center',
+    },
+    refreshButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#ec4899',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 25,
+        marginTop: 24,
+        gap: 8,
+    },
+    refreshButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 

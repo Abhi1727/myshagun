@@ -23,9 +23,6 @@
     "production": {
       "android": {
         "buildType": "apk"
-      },
-      "ios": {
-        "bundleIdentifier": "com.myshagun.app"
       }
     },
     "production-aab": {
@@ -40,9 +37,9 @@
         "serviceAccountKeyPath": "./google-service-account.json"
       },
       "ios": {
-        "appleId": "YOUR_APPLE_ID@example.com",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "YOUR_APPLE_TEAM_ID"
+        "appleId": "parihar.abhishek34@gmail.com",
+        "ascAppId": "6755908514",
+        "appleTeamId": "P9ZAX6CR9Q"
       }
     }
   }

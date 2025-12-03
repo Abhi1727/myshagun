@@ -184,13 +184,24 @@ router.post('/like', auth, async (req, res) => {
         let conversationId = null;
 
         if (mutualLike.length > 0) {
-            // It's a match! Create conversation
+            // It's a match! Check if conversation already exists
             match = true;
-            conversationId = uuidv4();
-            await db.query(
-                'INSERT INTO conversations (id, user1_id, user2_id) VALUES (?, ?, ?)',
-                [conversationId, userId, likedUserId]
-            );
+            
+            const [existingConvo] = await db.query(`
+                SELECT id FROM conversations
+                WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
+            `, [userId, likedUserId, likedUserId, userId]);
+
+            if (existingConvo.length > 0) {
+                conversationId = existingConvo[0].id;
+            } else {
+                // Create new conversation
+                conversationId = uuidv4();
+                await db.query(
+                    'INSERT INTO conversations (id, user1_id, user2_id) VALUES (?, ?, ?)',
+                    [conversationId, userId, likedUserId]
+                );
+            }
         }
 
         res.json({

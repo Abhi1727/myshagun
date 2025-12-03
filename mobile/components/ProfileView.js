@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -8,19 +8,30 @@ import {
     Alert,
     Image,
     TouchableOpacity,
-    RefreshControl
+    RefreshControl,
+    Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import api from '../config/api';
 
 const ProfileView = ({ navigation }) => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         fetchProfile();
     }, []);
+
+    // Refresh profile when screen comes into focus (e.g., after editing)
+    useFocusEffect(
+        useCallback(() => {
+            fetchProfile();
+        }, [])
+    );
 
     const fetchProfile = async () => {
         try {
@@ -38,6 +49,72 @@ const ProfileView = ({ navigation }) => {
     const onRefresh = () => {
         setRefreshing(true);
         fetchProfile();
+    };
+
+    const handleDeleteAccount = () => {
+        Alert.alert(
+            'Delete Account',
+            'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: confirmDeleteAccount
+                }
+            ]
+        );
+    };
+
+    const confirmDeleteAccount = async () => {
+        setDeleting(true);
+        try {
+            await api.delete('/auth/delete-account');
+            await AsyncStorage.removeItem('token');
+            Alert.alert('Account Deleted', 'Your account has been successfully deleted.');
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+            });
+        } catch (error) {
+            Alert.alert('Error', 'Failed to delete account. Please try again.');
+            console.error('Delete account error:', error);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const handleLogout = () => {
+        Alert.alert(
+            'Logout',
+            'Are you sure you want to logout?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Logout',
+                    onPress: confirmLogout
+                }
+            ]
+        );
+    };
+
+    const confirmLogout = async () => {
+        try {
+            await AsyncStorage.removeItem('token');
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Landing' }],
+            });
+        } catch (error) {
+            Alert.alert('Error', 'Failed to logout. Please try again.');
+            console.error('Logout error:', error);
+        }
     };
 
     const getAge = (dateOfBirth) => {
@@ -164,6 +241,59 @@ const ProfileView = ({ navigation }) => {
                 <Text style={styles.sectionTitle}>Looking For</Text>
                 <InfoRow icon="search" label="Interested In" value={profile.interested_in ? formatLabel(profile.interested_in) : 'N/A'} />
                 <InfoRow icon="people" label="Looking For" value={profile.interested_for ? formatLabel(profile.interested_for) : 'N/A'} />
+            </View>
+
+            {/* Logout Button */}
+            <View style={styles.logoutSection}>
+                <TouchableOpacity
+                    style={styles.logoutButton}
+                    onPress={handleLogout}
+                >
+                    <Ionicons name="log-out-outline" size={22} color="white" style={{ marginRight: 8 }} />
+                    <Text style={styles.logoutButtonText}>Logout</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Delete Account Section */}
+            <View style={styles.dangerSection}>
+                <Text style={styles.dangerSectionTitle}>Danger Zone</Text>
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={handleDeleteAccount}
+                    disabled={deleting}
+                >
+                    {deleting ? (
+                        <ActivityIndicator size="small" color="white" />
+                    ) : (
+                        <>
+                            <Ionicons name="trash-outline" size={20} color="white" style={{ marginRight: 8 }} />
+                            <Text style={styles.deleteButtonText}>Delete Account</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+                <Text style={styles.deleteWarning}>
+                    This will permanently delete your account and all associated data.
+                </Text>
+            </View>
+
+            {/* Legal Links Section */}
+            <View style={styles.legalSection}>
+                <TouchableOpacity
+                    style={styles.legalLink}
+                    onPress={() => Linking.openURL('https://myshagun.us/privacy-policy')}
+                >
+                    <Ionicons name="shield-checkmark-outline" size={20} color="#6b7280" />
+                    <Text style={styles.legalLinkText}>Privacy Policy</Text>
+                    <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.legalLink}
+                    onPress={() => Linking.openURL('https://myshagun.us/terms-of-service')}
+                >
+                    <Ionicons name="document-text-outline" size={20} color="#6b7280" />
+                    <Text style={styles.legalLinkText}>Terms of Service</Text>
+                    <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+                </TouchableOpacity>
             </View>
         </ScrollView>
     );
@@ -335,6 +465,96 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         flex: 1,
         textAlign: 'right',
+    },
+    logoutSection: {
+        marginHorizontal: 16,
+        marginBottom: 16,
+        marginTop: 8,
+    },
+    logoutButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#8B4513',
+        paddingVertical: 16,
+        borderRadius: 12,
+        shadowColor: '#8B4513',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    logoutButtonText: {
+        color: 'white',
+        fontSize: 17,
+        fontWeight: 'bold',
+    },
+    dangerSection: {
+        backgroundColor: '#fef2f2',
+        marginHorizontal: 16,
+        marginBottom: 16,
+        marginTop: 8,
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#fecaca',
+    },
+    dangerSectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#dc2626',
+        marginBottom: 16,
+    },
+    deleteButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#dc2626',
+        paddingVertical: 14,
+        borderRadius: 12,
+        shadowColor: '#dc2626',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    deleteButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    deleteWarning: {
+        fontSize: 12,
+        color: '#6b7280',
+        textAlign: 'center',
+        marginTop: 12,
+    },
+    legalSection: {
+        backgroundColor: 'white',
+        marginHorizontal: 16,
+        marginBottom: 30,
+        borderRadius: 16,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    legalLink: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f3f4f6',
+    },
+    legalLinkText: {
+        flex: 1,
+        fontSize: 15,
+        color: '#374151',
+        marginLeft: 12,
+        fontWeight: '500',
     },
 });
 

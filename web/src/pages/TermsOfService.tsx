@@ -253,7 +253,7 @@ const TermsOfService = () => {
               If you have any questions about these Terms of Service, please contact us:
             </p>
             <div className="bg-muted/50 p-6 rounded-lg space-y-2">
-              <p className="text-foreground"><strong>Email:</strong> info@myshaagun.com</p>
+              <p className="text-foreground"><strong>Email:</strong> info@myshagun.us</p>
               <p className="text-foreground"><strong>Phone:</strong> +1 (888) 927 7072</p>
               <p className="text-foreground"><strong>Address:</strong> 30 N Gould St, Sheridan, WY, 82801, USA</p>
             </div>

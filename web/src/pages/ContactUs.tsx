@@ -168,10 +168,10 @@ const ContactUs = () => {
                       Send us an email anytime
                     </p>
                     <a
-                      href="mailto:info@myshaagun.com"
+                      href="mailto:info@myshagun.us"
                       className="text-primary hover:underline font-medium"
                     >
-                      info@myshaagun.com
+                      info@myshagun.us
                     </a>
                   </div>
                 </div>
